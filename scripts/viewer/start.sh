@@ -70,14 +70,15 @@ if [ -z "$ROBOMAKER_CONTAINERS" ]; then
     exit
 fi
 
-ROBOMAKER_CONTAINERS_HTML=""
+# Create .js array of robomakers to pass to the HTML template 
+printf -v ROBOMAKER_CONTAINERS_HTML "'%s'," "${ROBOMAKER_CONTAINERS[@]}"
+export ROBOMAKER_CONTAINERS_HTML
+# Replace all variables in HTML template and create the viewer html file
+envsubst < index.template.html > $DR_VIEWER_HTML
+
 for c in $ROBOMAKER_CONTAINERS; do
-    C_URL="/$c/stream?topic=${TOPIC}&quality=${QUALITY}&width=${WIDTH}&height=${HEIGHT}"
-    C_IMG="<div class='card'><img class=\"card-img\" src=\"${C_URL}\" alt=\"$c\"></img></div>"
-    ROBOMAKER_CONTAINERS_HTML+= $C_IMG
     echo "  location /$c { proxy_pass http://$c:8080; rewrite /$c/(.*) /\$1 break; }" >> $DR_NGINX_CONF
 done
-envsubst < index.template.html > $DR_VIEWER_HTML
 echo "}" >> $DR_NGINX_CONF
 
 # Check if we will use Docker Swarm or Docker Compose
