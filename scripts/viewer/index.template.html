@@ -83,6 +83,10 @@
         label {
             margin-right: 0.5rem;
         }
+
+        .hide {
+            display: none;
+        }
     </style>
 </head>
 
@@ -174,7 +178,6 @@
 
                 div.appendChild(image)
                 return div
-
             })
         }))
 
@@ -182,15 +185,42 @@
         mainContainer = document.getElementById('main-container')
         cameraElements.forEach((el) => mainContainer.appendChild(el))
 
-
-
+        // Function fired when either select is made
         function select() {
-            robo = document.getElementById('robo-select').value
-            camera = document.getElementById('camera-select').value
-            var selection = document.querySelectorAll('div[data-camera="' + camera + '"][data-robo="' + robo + '"]')
-            console.log('The selection is', selection)
+            let cards = document.querySelectorAll('.card')
+            let roboSelection = document.getElementById('robo-select').value
+            let cameraSelection = document.getElementById('camera-select').value
+
+            if (roboSelection === 'all' && cameraSelection === 'all') {
+                cards.forEach(card => card.classList.remove('hide'))
+                return
+            } else
+                if (roboSelection === 'all') {
+                    cards.forEach(card => {
+                        if (card.dataset.camera !== cameraSelection) {
+                            card.classList.add('hide')
+                        } else {
+                            card.classList.remove('hide')
+                        }
+                    })
+                } else if (cameraSelection === 'all') {
+                    cards.forEach(card => {
+                        if (card.dataset.robo !== roboSelection) {
+                            card.classList.add('hide')
+                        } else {
+                            card.classList.remove('hide')
+                        }
+                    })
+                } else {
+                    cards.forEach(card => card.classList.add('hide'))
+
+                    var selectedCards = document.querySelectorAll('div[data-camera="' + cameraSelection + '"][data-robo="' + roboSelection + '"]')
+                    selectedCards.forEach(card => card.classList.remove('hide'))
+
+                }
         }
 
+        // Adds an 'all' option to the select options element argument
         function addAllOption(el) {
             var option = document.createElement('option')
             option.value = 'all'
