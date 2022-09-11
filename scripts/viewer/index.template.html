@@ -5,6 +5,11 @@
     <title>DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX - $TOPIC</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #500280;
+        }
+
+
         body {
             display: block;
             margin: 0;
@@ -33,7 +38,7 @@
             left: 0;
             right: 0;
             z-index: 2;
-            background: #500280
+            background: var(--primary-color)
         }
 
         .navbar-header {
@@ -57,9 +62,10 @@
 
         .card {
             margin: 8px;
-            max-width: 480px;
             box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 1px -1px, rgba(0, 0, 0, 0.14) 0px 1px 1px 0px, rgba(0, 0, 0, 0.12) 0px 1px 3px 0px;
             transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 600px;
+            min-height: 480px;
             border-radius: 4px;
             display: block;
             position: relative;
@@ -87,6 +93,18 @@
         .hide {
             display: none;
         }
+
+        .robo-camera-group {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .robo-maker {
+            padding: 1rem;
+            margin: 1rem;
+            border: medium solid var(--primary-color);
+            border-radius: 10px;
+        }
     </style>
 </head>
 
@@ -106,13 +124,6 @@
                     <label for="camera-select">Cameras:</label>
                     <select name="camera-select" id="camera-select">
                     </select>
-
-                    <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
-                    <label for="vehicle1"> I have a bike</label><br>
-                    <input type="checkbox" id="vehicle2" name="vehicle2" value="Car">
-                    <label for="vehicle2"> I have a car</label><br>
-                    <input type="checkbox" id="vehicle3" name="vehicle3" value="Boat">
-                    <label for="vehicle3"> I have a boat</label><br>
                 </div>
             </div>
         </div>
@@ -169,41 +180,60 @@
         })
         cameraSelect.addEventListener('change', select);
 
-        var cameraElements = [].concat(...robomakerContainers.map(robo => {
-            return cameras.map(camera => {
+        let robomakerSections = [].concat(...robomakerContainers.map(robo => {
+            let roboMaker = document.createElement('div')
+            roboMaker.classList.add('robo-maker')
+            roboMaker.dataset.robo = robo
+            let roboMakerTitle = document.createElement('h2')
+            roboMakerTitle.innerHTML = 'Robomaker: ' + robo
+            roboMaker.appendChild(roboMakerTitle)
+            let roboCameras = document.createElement('div')
+            roboCameras.dataset.robo = robo
+            roboCameras.classList.add('robo-camera-group')
+
+            cameras.forEach(camera => {
                 // Create div
                 var div = document.createElement('div')
                 div.dataset.camera = camera.id
                 div.dataset.robo = robo
                 div.classList.add('card')
+                let cameraTitle = document.createElement('h3')
+                cameraTitle.innerHTML = camera.id
+
                 // Create image
                 var image = document.createElement('img')
                 url = "/" + robo + "/stream?topic=" + camera.topic + "&quality=${QUALITY}&width=${WIDTH}&height=${HEIGHT}"
                 image.classList.add('card-img')
                 image.setAttribute('src', url)
-                image.setAttribute('alt', robo + '-' + camera)
+                image.setAttribute('alt', robo + '-' + camera.id)
 
+                div.appendChild(cameraTitle)
                 div.appendChild(image)
-                return div
+                roboCameras.append(div)
             })
+            roboMaker.appendChild(roboCameras)
+            return roboMaker
         }))
 
         // Add all created elements to the DOM
         mainContainer = document.getElementById('main-container')
-        cameraElements.forEach((el) => mainContainer.appendChild(el))
+        robomakerSections.forEach((el) => mainContainer.appendChild(el))
 
         // Function fired when either select is made
         function select() {
             let cards = document.querySelectorAll('.card')
+            let sections = document.querySelectorAll('.robo-maker')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
             let roboSelection = document.getElementById('robo-select').value
             let cameraSelection = document.getElementById('camera-select').value
             cameraLabelEl.innerHTML = roboSelection === 'all' ? 'Camera' : 'Cameras'
             if (roboSelection === 'all' && cameraSelection === 'all') {
                 cards.forEach(card => card.classList.remove('hide'))
+                sections.forEach(section => section.classList.remove('hide'))
                 return
             } else
                 if (roboSelection === 'all') {
+                    sections.forEach(section => section.classList.remove('hide'))
                     cards.forEach(card => {
                         if (card.dataset.camera !== cameraSelection) {
                             card.classList.add('hide')
@@ -212,17 +242,21 @@
                         }
                     })
                 } else if (cameraSelection === 'all') {
-                    cards.forEach(card => {
-                        if (card.dataset.robo !== roboSelection) {
-                            card.classList.add('hide')
+                    sections.forEach(section => {
+                        if (section.dataset.robo !== roboSelection) {
+                            section.classList.add('hide')
                         } else {
-                            card.classList.remove('hide')
+                            section.classList.remove('hide')
                         }
                     })
                 } else {
                     cards.forEach(card => card.classList.add('hide'))
+                    sections.forEach(section => section.classList.add('hide'))
 
-                    var selectedCards = document.querySelectorAll('div[data-camera="' + cameraSelection + '"][data-robo="' + roboSelection + '"]')
+                    var selectedSections = document.querySelectorAll('[data-robo="' + roboSelection + '"].robo-maker')
+                    selectedSections.forEach(section => section.classList.remove('hide'))
+
+                    var selectedCards = document.querySelectorAll('div[data-camera="' + cameraSelection + '"][data-robo="' + roboSelection + '"].card')
                     selectedCards.forEach(card => card.classList.remove('hide'))
 
                 }
