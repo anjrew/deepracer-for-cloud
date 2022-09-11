@@ -161,8 +161,15 @@
             },
         ]
 
+        let height = "$HEIGHT"
+        let width = "$WIDTH"
+        let { robo, camera, quality } = extractPropertiesFromUrl(location.href)
+        console.log('{ robo, camera, quality }', robo, camera, quality)
+
+        setupForm(robo, camera, quality)
+
         camQuality = document.getElementById('camera-quality')
-        camQuality.addEventListener('change', () => buildElements("$WIDTH", "$HEIGHT"));
+        camQuality.addEventListener('change', () => updatePage());
 
         // Add Robomaker select options
         roboSelect = document.getElementById('robo-select')
@@ -173,7 +180,7 @@
             option.innerHTML = robomaker
             roboSelect.appendChild(option)
         })
-        roboSelect.addEventListener('change', () => buildElements("$WIDTH", "$HEIGHT"));
+        roboSelect.addEventListener('change', () => updatePage());
 
 
         // Add Camera select options
@@ -185,10 +192,14 @@
             option.innerHTML = camera.id
             cameraSelect.appendChild(option)
         })
-        cameraSelect.addEventListener('change', () => buildElements("$QUALITY", "$WIDTH", "$HEIGHT"));
+        cameraSelect.addEventListener('change', () => updatePage());
+
+
+        buildElements(width, height)
 
 
         function buildElements(width, height) {
+            console.log(`Building elements`)
             let mainContainer = document.getElementById('main-container')
             let cameraCards = document.querySelectorAll('.card')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
@@ -258,58 +269,6 @@
         }
 
 
-        // Function fired when either select is made
-        function formValueChange() {
-            let cards = document.querySelectorAll('.card')
-            let sections = document.querySelectorAll('.robo-maker')
-            let cameraLabelEl = document.querySelector('[for="camera-select"]')
-            let roboSelection = document.getElementById('robo-select').value
-            let cameraSelectionEl = document.getElementById('camera-select')
-            let cameraSelection = cameraSelectionEl.value
-            let cameraAllSelectEl = cameraSelectionEl.querySelector('.all-select')
-            let cameraSelectTopEl = cameraSelectionEl.querySelector('option')
-
-            cameraAllSelectEl.classList.remove('hide')
-
-            cameraLabelEl.innerHTML = roboSelection === 'all' ? 'Camera' : 'Cameras'
-            if (roboSelection === 'all' && cameraSelection === 'all') {
-                cards.forEach(card => card.classList.remove('hide'))
-                sections.forEach(section => section.classList.remove('hide'))
-                return
-            } else
-                if (roboSelection === 'all') {
-                    sections.forEach(section => section.classList.remove('hide'))
-                    let cameraAllSelect = cameraSelection.querySelector('.all-select')
-                    cameraAllSelect.classList.add('hide')
-                    cameraAllSelect.value = cameraSelectTopEl.value
-                    cards.forEach(card => {
-                        if (card.dataset.camera !== cameraSelection) {
-                            card.classList.add('hide')
-                        } else {
-                            card.classList.remove('hide')
-                        }
-                    })
-                } else if (cameraSelection === 'all') {
-                    sections.forEach(section => {
-                        if (section.dataset.robo !== roboSelection) {
-                            section.classList.add('hide')
-                        } else {
-                            section.classList.remove('hide')
-                        }
-                    })
-                } else {
-                    cards.forEach(card => card.classList.add('hide'))
-                    sections.forEach(section => section.classList.add('hide'))
-
-                    var selectedSections = document.querySelectorAll('[data-robo="' + roboSelection + '"].robo-maker')
-                    selectedSections.forEach(section => section.classList.remove('hide'))
-
-                    var selectedCards = document.querySelectorAll('div[data-camera="' + cameraSelection + '"][data-robo="' + roboSelection + '"].card')
-                    selectedCards.forEach(card => card.classList.remove('hide'))
-
-                }
-        }
-
         // Adds an 'all' option to the select options element argument
         function addAllOption(el) {
             var option = document.createElement('option')
@@ -321,6 +280,69 @@
 
         function createStreamUrl(robo, topic, quality, width, height) {
             return "/" + robo + "/stream?topic=" + topic + "&quality=" + quality + "&width=" + width + "&height=" + height
+        }
+
+        function createUrl(robo, camera, quality, width, height) {
+            var url = new URL(origin);
+            var search_params = url.searchParams;
+            search_params.set('robo', robo);
+            search_params.set('camera', camera);
+            search_params.set('quality', quality);
+            search_params.set('width', width);
+            search_params.set('height', height);
+
+            // change the search property of the main url
+            url.search = search_params.toString();
+
+            return url
+        }
+
+        function extractPropertiesFromUrl(url) {
+            var url = new URL(url);
+            var search_params = url.searchParams;
+            return {
+                robo: search_params.get('robo'),
+                camera: search_params.get('camera'),
+                quality: search_params.get('quality'),
+                width: search_params.get('width'),
+                height: search_params.get('height')
+            }
+        }
+
+        function setupForm(robo, camera, quality) {
+            if (robo) {
+                document.getElementById('robo-select').value = robo
+            }
+            if (camera) {
+                document.getElementById('camera-select').value = camera
+            }
+            if (quality) {
+                document.getElementById('camera-quality').value = quality
+            }
+
+        }
+
+        function getFormValue() {
+            return {
+                robo: document.getElementById('robo-select').value,
+                camera: document.getElementById('camera-select').value,
+                quality: document.getElementById('camera-quality').value
+            }
+        }
+
+        function updatePage() {
+            setTimeout(() => {
+                let { robo, camera, quality } = getFormValue()
+                var url = createUrl(robo, camera, quality, width, height)
+                console.log('url.searchParams', url.search)
+                console.log('url', url)
+                console.log('url.href', url.href)
+
+
+                location.href = url.href
+                console.log(`Reloading page`)
+                location.reload(true)
+            }, 300)
         }
     </script>
 </body>
