@@ -163,6 +163,7 @@ else
     exit 1
 fi
 
+echo "Preaparing parmas"
 # Create Training Params Yaml.
 PARAMS_FILE=$(python3 $DR_DIR/scripts/upload/prepare-config.py)
 
