@@ -106,6 +106,13 @@
                     <label for="camera-select">Cameras:</label>
                     <select name="camera-select" id="camera-select">
                     </select>
+
+                    <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
+                    <label for="vehicle1"> I have a bike</label><br>
+                    <input type="checkbox" id="vehicle2" name="vehicle2" value="Car">
+                    <label for="vehicle2"> I have a car</label><br>
+                    <input type="checkbox" id="vehicle3" name="vehicle3" value="Boat">
+                    <label for="vehicle3"> I have a boat</label><br>
                 </div>
             </div>
         </div>
@@ -192,7 +199,6 @@
             let roboSelection = document.getElementById('robo-select').value
             let cameraSelection = document.getElementById('camera-select').value
             cameraLabelEl.innerHTML = roboSelection === 'all' ? 'Camera' : 'Cameras'
-            console.log('cards', cards)
             if (roboSelection === 'all' && cameraSelection === 'all') {
                 cards.forEach(card => card.classList.remove('hide'))
                 return
@@ -214,8 +220,6 @@
                         }
                     })
                 } else {
-                    console.log('roboSelection', roboSelection)
-                    console.log('cameraSelection', cameraSelection)
                     cards.forEach(card => card.classList.add('hide'))
 
                     var selectedCards = document.querySelectorAll('div[data-camera="' + cameraSelection + '"][data-robo="' + roboSelection + '"]')
