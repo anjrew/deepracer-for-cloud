@@ -124,6 +124,8 @@
                     <label for="camera-select">Cameras:</label>
                     <select name="camera-select" id="camera-select">
                     </select>
+                </div>
+                <div class="select">
                     <label for="camera-quality">Quality:</label>
                     <input name="camera-quality" id="camera-quality" , type="number" value="$QUALITY" />
                 </div>
@@ -160,7 +162,7 @@
         ]
 
         camQuality = document.getElementById('camera-quality')
-        camQuality.addEventListener('change', () => formValueChange());
+        camQuality.addEventListener('change', () => buildElements("$WIDTH", "$HEIGHT"));
 
         // Add Robomaker select options
         roboSelect = document.getElementById('robo-select')
@@ -171,7 +173,7 @@
             option.innerHTML = robomaker
             roboSelect.appendChild(option)
         })
-        roboSelect.addEventListener('change', () => formValueChange());
+        roboSelect.addEventListener('change', () => buildElements("$WIDTH", "$HEIGHT"));
 
 
         // Add Camera select options
@@ -183,50 +185,78 @@
             option.innerHTML = camera.id
             cameraSelect.appendChild(option)
         })
-        cameraSelect.addEventListener('change', formValueChange);
-        console.log(robomakerContainers, 'robomakerContainers')
+        cameraSelect.addEventListener('change', () => buildElements("$QUALITY", "$WIDTH", "$HEIGHT"));
 
-        let robomakerSections = robomakerContainers.map(robo => {
-            let roboMaker = document.createElement('div')
-            roboMaker.classList.add('robo-maker')
-            roboMaker.dataset.robo = robo
-            let roboMakerTitle = document.createElement('h2')
-            roboMakerTitle.innerHTML = 'Robomaker: ' + robo
-            roboMaker.appendChild(roboMakerTitle)
-            let roboCameras = document.createElement('div')
-            roboCameras.dataset.robo = robo
-            roboCameras.classList.add('robo-camera-group')
 
-            cameras.forEach(camera => {
-                // Create div
-                var div = document.createElement('div')
-                div.dataset.camera = camera.id
-                div.dataset.robo = robo
-                div.classList.add('card')
-                let cameraTitle = document.createElement('h3')
-                cameraTitle.innerHTML = camera.id
+        function buildElements(width, height) {
+            let mainContainer = document.getElementById('main-container')
+            let cameraCards = document.querySelectorAll('.card')
+            let cameraLabelEl = document.querySelector('[for="camera-select"]')
+            let roboSelection = document.getElementById('robo-select').value
+            let cameraSelectionEl = document.getElementById('camera-select')
+            let cameraSelection = cameraSelectionEl.value
+            let cameraAllSelectEl = cameraSelectionEl.querySelector('.all-select')
+            let cameraSelectTopEl = cameraSelectionEl.querySelectorAll('option')[1]
+            let qualityVal = document.getElementById('camera-quality').value
 
-                // Create image
-                var image = document.createElement('img')
-                image.dataset.camera = camera.id
+            mainContainer.innerHTML = ''
 
-                url = createStreamUrl(robo, camera.topic, "$QUALITY", "$WIDTH", "$HEIGHT")
-                image.classList.add('card-img')
-                image.setAttribute('src', url)
-                image.setAttribute('alt', robo + '-' + camera.id)
+            if (roboSelection === 'all') {
+                if (cameraSelection === 'all') {
+                    cameraAllSelectEl.classList.add('hide')
+                    cameraAllSelectEl.value = cameraSelectTopEl.value
+                }
+            } else {
+                cameraAllSelectEl.classList.remove('hide')
+            }
 
-                div.appendChild(cameraTitle)
-                div.appendChild(image)
-                roboCameras.append(div)
-            })
-            roboMaker.appendChild(roboCameras)
-            return roboMaker
-        })
-        console.log(robomakerSections, 'robomakerSections')
+            let robomakerSections = robomakerContainers
+                .filter((robo) => roboSelection === 'all' || roboSelection === robo)
+                .map(robo => {
+                    let roboMaker = document.createElement('div')
+                    roboMaker.classList.add('robo-maker')
+                    roboMaker.dataset.robo = robo
+                    let roboMakerTitle = document.createElement('h2')
+                    roboMakerTitle.innerHTML = 'Robomaker: ' + robo
+                    roboMaker.appendChild(roboMakerTitle)
+                    let roboCameras = document.createElement('div')
+                    roboCameras.dataset.robo = robo
+                    roboCameras.classList.add('robo-camera-group')
 
-        // Add all created elements to the DOM
-        mainContainer = document.getElementById('main-container')
-        robomakerSections.forEach((el) => mainContainer.appendChild(el))
+                    let camerasToShow = cameras
+                        .filter((cam) => cameraSelection === 'all' || cameraSelection === cam.id)
+
+                    camerasToShow.forEach(camera => {
+                        // Create div
+                        var div = document.createElement('div')
+                        div.dataset.camera = camera.id
+                        div.dataset.robo = robo
+                        div.classList.add('card')
+                        let cameraTitle = document.createElement('h3')
+                        cameraTitle.innerHTML = camera.id
+
+                        // Create image
+                        var image = document.createElement('img')
+                        image.dataset.camera = camera.id
+
+                        url = createStreamUrl(robo, camera.topic, qualityVal, width, height)
+                        image.classList.add('card-img')
+                        image.setAttribute('src', url)
+                        image.setAttribute('alt', robo + '-' + camera.id)
+
+                        div.appendChild(cameraTitle)
+                        div.appendChild(image)
+                        roboCameras.append(div)
+                    })
+                    roboMaker.appendChild(roboCameras)
+                    return roboMaker
+                })
+
+            // Add all created elements to the DOM
+            mainContainer = document.getElementById('main-container')
+            robomakerSections.forEach((el) => mainContainer.appendChild(el))
+        }
+
 
         // Function fired when either select is made
         function formValueChange() {
@@ -238,6 +268,7 @@
             let cameraSelection = cameraSelectionEl.value
             let cameraAllSelectEl = cameraSelectionEl.querySelector('.all-select')
             let cameraSelectTopEl = cameraSelectionEl.querySelector('option')
+
             cameraAllSelectEl.classList.remove('hide')
 
             cameraLabelEl.innerHTML = roboSelection === 'all' ? 'Camera' : 'Cameras'
