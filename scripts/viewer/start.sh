@@ -70,14 +70,12 @@ if [ -z "$ROBOMAKER_CONTAINERS" ]; then
     exit
 fi
 
+# Expose the diamensions to the HTML template
+export QUALITY
+export WIDTH
+export HEIGHT
 # Create .js array of robomakers to pass to the HTML template 
-printf -v ROBOMAKER_CONTAINERS_HTML "%s," "${ROBOMAKER_CONTAINERS[@]}"
-# for (( i = 0 ; i < ${#ROBOMAKER_CONTAINERS[@]} ; i++ )) do  ROBOMAKER_CONTAINERS_HTML[$i]=${"'"ROBOMAKER_CONTAINERS[$i]"',"}; done
-export ROBOMAKER_CONTAINERS_HTML
-
-
-# Build up the values for the HTML file.
-ROBOMAKER_CONTAINERS_HTML="" 
+export ROBOMAKER_CONTAINERS_HTML="" 
 for c in $ROBOMAKER_CONTAINERS; do
     ROBOMAKER_CONTAINERS_HTML+="'$c',"
 done

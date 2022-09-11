@@ -124,6 +124,8 @@
                     <label for="camera-select">Cameras:</label>
                     <select name="camera-select" id="camera-select">
                     </select>
+                    <label for="camera-quality">Quality:</label>
+                    <input name="camera-quality" id="camera-quality" , type="number" value="$QUALITY" />
                 </div>
             </div>
         </div>
@@ -157,6 +159,9 @@
             },
         ]
 
+        camQuality = document.getElementById('camera-quality')
+        camQuality.addEventListener('change', () => formValueChange());
+
         // Add Robomaker select options
         roboSelect = document.getElementById('robo-select')
         addAllOption(roboSelect)
@@ -166,7 +171,7 @@
             option.innerHTML = robomaker
             roboSelect.appendChild(option)
         })
-        roboSelect.addEventListener('change', () => select());
+        roboSelect.addEventListener('change', () => formValueChange());
 
 
         // Add Camera select options
@@ -178,9 +183,10 @@
             option.innerHTML = camera.id
             cameraSelect.appendChild(option)
         })
-        cameraSelect.addEventListener('change', select);
+        cameraSelect.addEventListener('change', formValueChange);
+        console.log(robomakerContainers, 'robomakerContainers')
 
-        let robomakerSections = [].concat(...robomakerContainers.map(robo => {
+        let robomakerSections = robomakerContainers.map(robo => {
             let roboMaker = document.createElement('div')
             roboMaker.classList.add('robo-maker')
             roboMaker.dataset.robo = robo
@@ -202,7 +208,9 @@
 
                 // Create image
                 var image = document.createElement('img')
-                url = "/" + robo + "/stream?topic=" + camera.topic + "&quality=${QUALITY}&width=${WIDTH}&height=${HEIGHT}"
+                image.dataset.camera = camera.id
+
+                url = createStreamUrl(robo, camera.topic, "$QUALITY", "$WIDTH", "$HEIGHT")
                 image.classList.add('card-img')
                 image.setAttribute('src', url)
                 image.setAttribute('alt', robo + '-' + camera.id)
@@ -213,19 +221,25 @@
             })
             roboMaker.appendChild(roboCameras)
             return roboMaker
-        }))
+        })
+        console.log(robomakerSections, 'robomakerSections')
 
         // Add all created elements to the DOM
         mainContainer = document.getElementById('main-container')
         robomakerSections.forEach((el) => mainContainer.appendChild(el))
 
         // Function fired when either select is made
-        function select() {
+        function formValueChange() {
             let cards = document.querySelectorAll('.card')
             let sections = document.querySelectorAll('.robo-maker')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
             let roboSelection = document.getElementById('robo-select').value
-            let cameraSelection = document.getElementById('camera-select').value
+            let cameraSelectionEl = document.getElementById('camera-select')
+            let cameraSelection = cameraSelectionEl.value
+            let cameraAllSelectEl = cameraSelectionEl.querySelector('.all-select')
+            let cameraSelectTopEl = cameraSelectionEl.querySelector('option')
+            cameraAllSelectEl.classList.remove('hide')
+
             cameraLabelEl.innerHTML = roboSelection === 'all' ? 'Camera' : 'Cameras'
             if (roboSelection === 'all' && cameraSelection === 'all') {
                 cards.forEach(card => card.classList.remove('hide'))
@@ -234,6 +248,9 @@
             } else
                 if (roboSelection === 'all') {
                     sections.forEach(section => section.classList.remove('hide'))
+                    let cameraAllSelect = cameraSelection.querySelector('.all-select')
+                    cameraAllSelect.classList.add('hide')
+                    cameraAllSelect.value = cameraSelectTopEl.value
                     cards.forEach(card => {
                         if (card.dataset.camera !== cameraSelection) {
                             card.classList.add('hide')
@@ -267,9 +284,13 @@
             var option = document.createElement('option')
             option.value = 'all'
             option.innerHTML = 'All'
+            option.classList.add('all-select')
             el.appendChild(option)
         }
 
+        function createStreamUrl(robo, topic, quality, width, height) {
+            return "/" + robo + "/stream?topic=" + topic + "&quality=" + quality + "&width=" + width + "&height=" + height
+        }
     </script>
 </body>
 
