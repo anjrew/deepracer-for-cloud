@@ -71,11 +71,24 @@ if [ -z "$ROBOMAKER_CONTAINERS" ]; then
 fi
 
 # Create .js array of robomakers to pass to the HTML template 
-printf -v ROBOMAKER_CONTAINERS_HTML "'%s'," "${ROBOMAKER_CONTAINERS[@]}"
+printf -v ROBOMAKER_CONTAINERS_HTML "%s," "${ROBOMAKER_CONTAINERS[@]}"
+# for (( i = 0 ; i < ${#ROBOMAKER_CONTAINERS[@]} ; i++ )) do  ROBOMAKER_CONTAINERS_HTML[$i]=${"'"ROBOMAKER_CONTAINERS[$i]"',"}; done
 export ROBOMAKER_CONTAINERS_HTML
-# Replace all variables in HTML template and create the viewer html file
-envsubst < index.template.html > $DR_VIEWER_HTML
 
+
+# Build up the values for the HTML file.
+ROBOMAKER_CONTAINERS_HTML="" 
+for c in $ROBOMAKER_CONTAINERS; do
+    ROBOMAKER_CONTAINERS_HTML+="'$c',"
+done
+SCRIPT_PATH="${BASH_SOURCE:-$0}"
+ABS_SCRIPT_PATH="$(realpath "${SCRIPT_PATH}")"
+ABS_DIRECTORY="$(dirname "${ABS_SCRIPT_PATH}")"
+INDEX_HTML_TEMPLATE="${ABS_DIRECTORY}/index.template.html"
+# Replace all variables in HTML template and create the viewer html file
+envsubst < "${INDEX_HTML_TEMPLATE}" > $DR_VIEWER_HTML
+
+# Add proxy paths in the NGINX file
 for c in $ROBOMAKER_CONTAINERS; do
     echo "  location /$c { proxy_pass http://$c:8080; rewrite /$c/(.*) /\$1 break; }" >> $DR_NGINX_CONF
 done
