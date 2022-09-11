@@ -188,9 +188,11 @@
         // Function fired when either select is made
         function select() {
             let cards = document.querySelectorAll('.card')
+            let cameraLabelEl = document.querySelector('[for="camera-select"]')
             let roboSelection = document.getElementById('robo-select').value
             let cameraSelection = document.getElementById('camera-select').value
-
+            cameraLabelEl.innerHTML = roboSelection === 'all' ? 'Camera' : 'Cameras'
+            console.log('cards', cards)
             if (roboSelection === 'all' && cameraSelection === 'all') {
                 cards.forEach(card => card.classList.remove('hide'))
                 return
@@ -212,6 +214,8 @@
                         }
                     })
                 } else {
+                    console.log('roboSelection', roboSelection)
+                    console.log('cameraSelection', cameraSelection)
                     cards.forEach(card => card.classList.add('hide'))
 
                     var selectedCards = document.querySelectorAll('div[data-camera="' + cameraSelection + '"][data-robo="' + roboSelection + '"]')
