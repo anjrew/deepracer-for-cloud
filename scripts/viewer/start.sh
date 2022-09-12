@@ -114,3 +114,10 @@ if [[ -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
   $BROWSER "http://127.0.01:8100" &
 fi
 
+
+IP_ADDRESSES="$( hostname -I)";
+echo "The Viewer is avaliable on the following hosts:"
+for ip in $IP_ADDRESSES;
+do
+    echo "http://${ip}:${DR_WEBVIEWER_PORT}"
+done
