@@ -143,18 +143,18 @@
         ];
 
         var cameras = [
-            {
-                id: "camera",
-                topic: "/racecar/camera/zed/rgb/image_rect_color",
-            },
-            {
-                id: "main_camera",
-                topic: "/racecar/main_camera/zed/rgb/image_rect_color",
-            },
-            {
-                id: "sub_camera",
-                topic: "/sub_camera/zed/rgb/image_rect_color",
-            },
+            // {
+            //     id: "camera",
+            //     topic: "/racecar/camera/zed/rgb/image_rect_color",
+            // },
+            // {
+            //     id: "main_camera",
+            //     topic: "/racecar/main_camera/zed/rgb/image_rect_color",
+            // },
+            // {
+            //     id: "sub_camera",
+            //     topic: "/sub_camera/zed/rgb/image_rect_color",
+            // },
             {
                 id: "kvs_stream",
                 topic: "/racecar/deepracer/kvs_stream",
@@ -199,13 +199,18 @@
 
 
         function buildElements(width, height) {
+
+            const urlSearchParams = new URLSearchParams(window.location.search)
+
             console.log(`Building elements`)
             let mainContainer = document.getElementById('main-container')
             let cameraCards = document.querySelectorAll('.card')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
             let roboSelection = document.getElementById('robo-select').value
+            roboSelection = urlSearchParams.get('robo') || roboSelection
             let cameraSelectionEl = document.getElementById('camera-select')
             let cameraSelection = cameraSelectionEl.value
+            cameraSelection = urlSearchParams.get('camera') || cameraSelection
             let cameraAllSelectEl = cameraSelectionEl.querySelector('.all-select')
             let cameraSelectTopEl = cameraSelectionEl.querySelectorAll('option')[1]
             let qualityVal = document.getElementById('camera-quality').value
@@ -340,8 +345,11 @@
 
 
                 location.href = url.href
-                console.log(`Reloading page`)
-                location.reload(true)
+                console.log(`Reloading page`, location.href)
+                setTimeout(() => {
+
+                    location.reload(true)
+                },5000)
             }, 300)
         }
     </script>
