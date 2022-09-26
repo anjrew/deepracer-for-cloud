@@ -161,8 +161,10 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
     export MINIO_GROUPNAME=$(id -g -n)
     if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
     then
+        echo "Deploying swarm stack"
         docker stack deploy $DR_MINIO_COMPOSE_FILE s3
     else
+        echo "Running compose"
         docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
     fi
 

@@ -7,19 +7,32 @@ function ctrl_c() {
         exit 1
 }
 
+usage(){
+	echo "Usage: $0 [-c <cloud>] [-a <arch>]"
+    echo ""
+    echo "Set up the full repository and downloading the core Docker images."
+    echo "-c        Sets the cloud version to be configured, automatically updates the DR_CLOUD parameter in system.env. Options are azure, aws or local. Default is local."
+    echo "-a        Sets the architecture to be configured. Either cpu or gpu. Default is gpu."
+    echo "-s        Skip copying over default files."
+	exit 1
+}
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
 OPT_ARCH="gpu"
 OPT_CLOUD=""
+SKIP_FILES=0
 
-while getopts ":m:c:a:" opt; do
+while getopts ":m:c:a:s" opt; do
 case $opt in
 a) OPT_ARCH="$OPTARG"
 ;;
 m) OPT_MOUNT="$OPTARG"
 ;; 
 c) OPT_CLOUD="$OPTARG"
+;;
+s) SKIP_FILES=1
 ;;
 \?) echo "Invalid option -$OPTARG" >&2
 exit 1
@@ -75,14 +88,19 @@ sudo chmod -R g+w /tmp/sagemaker
 mkdir -p $(eval echo "~${USER}")/.aws $INSTALL_DIR/docker/volumes/
 ln -sf $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
 
-# copy rewardfunctions
-mkdir -p $INSTALL_DIR/custom_files 
-cp $INSTALL_DIR/defaults/hyperparameters.json $INSTALL_DIR/custom_files/
-cp $INSTALL_DIR/defaults/model_metadata.json $INSTALL_DIR/custom_files/
-cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
+if [SKIP_FILES -eq 0]
+then    
+    # copy rewardfunctions
+    mkdir -p $INSTALL_DIR/custom_files 
+    cp $INSTALL_DIR/defaults/hyperparameters.json $INSTALL_DIR/custom_files/
+    cp $INSTALL_DIR/defaults/model_metadata.json $INSTALL_DIR/custom_files/
+    cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
+    # copy default environment files
+    cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
+    cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
+fi
 
-cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
-cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
+
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
     AWS_EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
     AWS_REGION="`echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
