@@ -47,8 +47,12 @@ def check_valid_action_space_property(val: str, obj: Dict) -> Boolean:
         Boolean: True if the action space parameters are valid and compatible
     """
     val_is_valid = val == 'continuous' or val == 'discrete'
-    label = get_action_space_label(obj)
-    return val_is_valid and label == label
+    label = ''
+    try:
+        label = get_action_space_label(obj)
+    except:
+        pass
+    return val_is_valid and val == label
 
 
 def get_action_space_label(action_space: Dict) -> str:
