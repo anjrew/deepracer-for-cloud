@@ -20,6 +20,9 @@ function ctrl_c() {
         exit 1
 }
 
+echo "Training $DR_RUN_ID stated on $(date -u)" > $DR_TIMING_FILE
+echo $(date -u +%s) >> $DR_TIMING_FILE
+
 OPT_DISPLAY="SAGEMAKER"
 
 while getopts ":whqsavr:" opt; do

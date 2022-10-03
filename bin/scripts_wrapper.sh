@@ -312,3 +312,5 @@ function dr-update-viewer {
   $DR_DIR/scripts/viewer/stop.sh "$@"
   $DR_DIR/scripts/viewer/start.sh "$@"
 }
+
+export DR_TIMING_FILE=$DR_DIR/tmp/training-timing

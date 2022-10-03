@@ -5,6 +5,14 @@ RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
 
 SAGEMAKER_CONTAINERS=$(docker ps | awk ' /sagemaker/ { print $1 } '| xargs )
 
+START_TIME=$(sed -n 2p $DR_TIMING_FILE)
+STOP_TIME="$(date +%s)"
+SECONDS_DIFF=$(echo "$STOP_TIME-$START_TIME" | bc)
+RUN_TIME=$(printf '%dd:%dh:%dm:%ds\n' $((SECONDS_DIFF/86400)) $((SECONDS_DIFF%86400/3600)) $((SECONDS_DIFF%3600/60)) $((SECONDS_DIFF%60)))
+RESULT="Training $DR_RUN_ID stopped on $(date -u). Run time: $RUN_TIME"
+echo $RESULT >> $DR_TIMING_FILE
+echo $RESULT
+
 if [[ -n $SAGEMAKER_CONTAINERS ]];
 then
     for CONTAINER in $SAGEMAKER_CONTAINERS; do
@@ -29,3 +37,5 @@ else
     export ROBOMAKER_COMMAND=""
     docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR down
 fi
+
+

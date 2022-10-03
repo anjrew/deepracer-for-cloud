@@ -88,8 +88,9 @@ sudo chmod -R g+w /tmp/sagemaker
 mkdir -p $(eval echo "~${USER}")/.aws $INSTALL_DIR/docker/volumes/
 ln -sf $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
 
-if [SKIP_FILES -eq 0]
-then    
+if (($SKIP_FILES == 0))
+then
+    echo "Setting default files"    
     # copy rewardfunctions
     mkdir -p $INSTALL_DIR/custom_files 
     cp $INSTALL_DIR/defaults/hyperparameters.json $INSTALL_DIR/custom_files/

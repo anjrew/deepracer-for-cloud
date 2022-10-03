@@ -1,0 +1,13 @@
+{
+    "steering": {
+        "left_deg": 30,
+        "right_deg": 30,
+        "grain_deg": 5
+    },
+    "speed": {
+        "min": 30,
+        "max": 30,
+        "step": 0.25
+    }
+
+}
