@@ -1,7 +1,8 @@
+from argparse import ArgumentParser
 from functools import reduce
-import json
-from argparse import ArgumentParser, Namespace
 import numpy as np
+import generate_discete_action_space_functions as fn
+import json
 import math
 
 
@@ -41,11 +42,21 @@ bottom_speed = speed['low']
 left = steering_angle['high']
 right = steering_angle['low']
 
-actions = []
 
-left_range = np.arange(0, left, steering_step)
-right_range = np.arange(0, right, steering_step)
+left_range = np.arange(0, left, steering_step)[1:]
+right_range = np.arange(0, right, steering_step)[1:]
 speed_range = np.arange(bottom_speed, top_speed, speed_step)
+
+actions = [
+    # Create all speeds for angle of 0deg
+    fn.create_actions_for_speeds(speed_range, 0),
+    # Create left actions
+    fn.create_direction_actions(left_range, speed_range, full_speed_angle, speed_step, True),
+    # Create right actions
+    fn.create_direction_actions(right_range, speed_range, full_speed_angle, speed_step, False)  
+]
+
+actions = reduce(lambda x, y: x + y ,actions)
 
 
 def create_full_speed_actions(speed_range: np.array, angle: float) -> list:

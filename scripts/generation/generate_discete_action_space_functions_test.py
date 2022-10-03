@@ -1,5 +1,3 @@
-
-
 import generate_discete_action_space_functions as g
 import pytest
 
@@ -23,6 +21,12 @@ def test_direction_of_zero_should_throw():
          g.create_direction_actions(
         [0, 2, 3, 4, 5, 6, 9, 15, 24], [1, 2], 8, 2)
          assert e_info == 'A steering range of "0" should not be used in the "create_direction_actions" to make actions'
+
+# def test_direction_of_zero_should_throw():
+#     with pytest.raises(Exception) as e_info:
+#          g.create_actions_for_speeds(
+#         [0, 2, 3, 4, 5, 6, 9, 15, 24], [1, 2], 8, 2)
+#          assert e_info == 'A steering range of "0" should not be used in the "create_direction_actions" to make actions'
     
     
 

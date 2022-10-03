@@ -1,46 +1,49 @@
+from xmlrpc.client import Boolean
 import numpy as np
 import math
 
 
-def create_actions_for_speeds(speed_range: np.array, angle: float) -> list:
+def create_actions_for_speeds(speed_range: np.array, angle: float, is_left=True) -> list:
     actions = []
     for speed in speed_range:
         actions.append({
-            "steering_angle": angle,
+            "steering_angle": angle if is_left else -abs(angle),
             "speed": speed
         },)
     return actions
 
 
-def create_direction_actions(steering_range: np.array, speed_range: np.array, full_speed_angle: int, speed_step: float) -> list:
-    
-    if 0 in steering_range: 
-        raise Exception('A steering range of "0" should not be used in the "create_direction_actions" to make actions')
+def create_direction_actions(steering_range: np.array, speed_range: np.array, full_speed_angle: int, speed_step: float, is_left: Boolean) -> list:
+
+    if 0 in steering_range:
+        raise Exception(
+            'A steering range of "0" should not be used in the "create_direction_actions" to make actions')
 
     bottom_speed = speed_range[0]
 
     actions = []
     for angle in steering_range:
         if angle <= full_speed_angle:
-            actions.extend(create_actions_for_speeds(speed_range, angle))
+            actions.extend(create_actions_for_speeds(
+                speed_range, angle, is_left))
         else:
             remaining_angles = find_remaining_angles(
                 steering_range, full_speed_angle)
 
-            amount_of_speeds = len(speed_range)
-            angles_top_speed_index_map = get_top_speed_index_map(remaining_angles, amount_of_speeds)
-
+            angles_top_speed_index_map = get_top_speed_index_map(
+                remaining_angles, len(speed_range))
+            print(angles_top_speed_index_map)
             for steer_angle in remaining_angles:
                 speed_range_remaining = np.arange(
                     bottom_speed, angles_top_speed_index_map[steer_angle], speed_step)
 
                 actions.extend(create_actions_for_speeds(
-                    speed_range_remaining, steer_angle))
+                    speed_range_remaining, steer_angle, is_left))
 
     return actions
 
 
-def get_top_speed_index_map(remaining_angles:np.array, amount_of_speeds: int) -> dict:
+def get_top_speed_index_map(remaining_angles: np.array, amount_of_speeds: int) -> dict:
     angles_top_speed_index_map = {}
 
     amount_of_remaining_angles = len(remaining_angles)
@@ -50,6 +53,7 @@ def get_top_speed_index_map(remaining_angles:np.array, amount_of_speeds: int) ->
 
         angles_top_speed_index_map.update(
             {ang: math.ceil(index * speed_index_step)})
+    return angles_top_speed_index_map
 
 
 def find_remaining_angles(steering_range: np.array, full_speed_angle: float) -> np.array:
