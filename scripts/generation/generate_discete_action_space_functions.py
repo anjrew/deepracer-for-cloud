@@ -19,21 +19,14 @@ def create_direction_actions(steering_range: np.array, speed_range: np.array, is
         raise Exception(
             'A steering range of "0" should not be used in the "create_direction_actions" to make actions')
 
-    bottom_speed = speed_range[0]
-
     actions = []
 
     angles_top_speed_index_map = get_top_speed_index_map(
         steering_range, len(speed_range))
-    print('angles_top_speed_index_map', angles_top_speed_index_map)
 
     for steer_angle in steering_range:
         steer_angle_speed_index = angles_top_speed_index_map[steer_angle]
-        print('\nsteer_angle', steer_angle)
-        print('steer_angle_speed_index', steer_angle_speed_index)
-        print('speed_range', speed_range)
         speed_range_remaining = speed_range[:steer_angle_speed_index+1]
-        print('speed_range_remaining', speed_range_remaining)
 
         actions.extend(create_actions_for_speeds(
             speed_range_remaining, steer_angle, is_left))

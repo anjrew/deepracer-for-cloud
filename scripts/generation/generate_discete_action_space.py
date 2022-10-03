@@ -58,11 +58,11 @@ corner_speed_range = speed_range[:-1]
 print('corner_speed_range', corner_speed_range)
 actions = [
     # Create all speeds for angle of 0deg
-    # fn.create_actions_for_speeds(speed_range, 0, True),
+    fn.create_actions_for_speeds(speed_range, 0),
     # Create left actions
     fn.create_direction_actions(left_range, corner_speed_range, True),
     # Create right actions
-    # fn.create_direction_actions(right_range, speed_range, full_speed_angle, False)
+    fn.create_direction_actions(right_range, corner_speed_range, False)
 ]
 
 actions = reduce(lambda x, y: x + y, actions)
