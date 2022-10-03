@@ -105,20 +105,3 @@ assert check_neural_network_property(
     data['neural_network']), f"Invalid 'neural_network' value detected: {str(data['neural_network'])}"
 assert data['training_algorithm'] == "sac" or data[
     'training_algorithm'] == "clipped_ppo", f"Invalid 'training_algorithm' detected:  {str(data['training_algorithm'])}"
-# assert check_neural_network_property(data['neural_network']), "Incorrect neural netowork value detected"
-
-
-action_space
-        },
-
-
-
-action_space_type
-version
-# # Iterating through the json
-# # list
-# for i in data['emp_details']:
-#     print(i)
-
-# # Closing file
-# f.close()
