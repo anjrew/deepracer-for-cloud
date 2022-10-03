@@ -10,6 +10,7 @@ def check_sensor_property(test: List) -> Boolean:
     Returns:
         Boolean: True if it is valid and false if it is not
     """
+    
     cameras = ["FRONT_FACING_CAMERA", "STEREO_CAMERAS"]
     options = ["LIDAR"] + cameras
     are_valid_sensors = all([
@@ -62,19 +63,24 @@ def get_action_space_label(action_space: Dict) -> str:
     Returns:
         str: The action space label
     """
+    types = (float, int)
     try:
-        if isinstance(action_space['speed']['high'], float, int) \
-            and isinstance(action_space['speed']['low'], float, int) \
-            and isinstance(action_space['steering_angle']['high'], float, int) \
-            and isinstance(action_space['steering_angle']['low'], float, int):
+        speed_high_valid = isinstance(action_space['speed']['high'], types)
+        speed_low_valid = isinstance(action_space['speed']['low'], types)
+        angle_high_valid = isinstance(action_space['steering_angle']['high'], types)
+        angle_low_valid = isinstance(action_space['steering_angle']['low'], types)
+        if speed_high_valid \
+            and speed_low_valid \
+            and angle_high_valid \
+            and angle_low_valid:
             return 'continuous'
     except:
         try:
             if isinstance(action_space, list) \
                 and all([
                     isinstance(a, dict) and \
-                    isinstance(a['steering_angle'], float, int) and \
-                                            isinstance(a['speed'], float, int) \
+                    isinstance(a['steering_angle'], types) and \
+                                            isinstance(a['speed'], types) \
                     for a in action_space]):
                     return 'discrete'
         except:
