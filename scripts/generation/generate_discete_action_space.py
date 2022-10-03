@@ -43,21 +43,30 @@ left = steering_angle['high']
 right = steering_angle['low']
 
 
-left_range = np.arange(0, left, steering_step)[1:]
-right_range = np.arange(0, right, steering_step)[1:]
-speed_range = np.arange(bottom_speed, top_speed, speed_step)
+left_range = fn.get_full_range(0, abs(left), abs(left)/steering_step)[1:]
+right_range = fn.get_full_range(0, abs(right), abs(right)/steering_step)[1:]
 
+speed_range = fn.get_full_range(
+    bottom_speed, top_speed, (top_speed-bottom_speed) / speed_step)
+
+print('top_speed', top_speed)
+print('speed_range', speed_range)
+print('right_range', right_range)
+print('left_range', left_range)
+
+corner_speed_range = speed_range[:-1]
+print('corner_speed_range', corner_speed_range)
 actions = [
     # Create all speeds for angle of 0deg
-    fn.create_actions_for_speeds(speed_range, 0),
+    # fn.create_actions_for_speeds(speed_range, 0, True),
     # Create left actions
-    fn.create_direction_actions(left_range, speed_range, full_speed_angle, speed_step, True),
+    fn.create_direction_actions(left_range, corner_speed_range, True),
     # Create right actions
-    fn.create_direction_actions(right_range, speed_range, full_speed_angle, speed_step, False)  
+    # fn.create_direction_actions(right_range, speed_range, full_speed_angle, False)
 ]
 
-actions = reduce(lambda x, y: x + y ,actions)
-
+actions = reduce(lambda x, y: x + y, actions)
+print(actions)
 
 def create_full_speed_actions(speed_range: np.array, angle: float) -> list:
     actions = []
@@ -93,7 +102,7 @@ def create_direction_actions(steering_range: np.array, speed_range: np.array) ->
                     {ang: math.ceil(index * speed_index_step)})
 
             for steer_angle in remaining_angles:
-                speed_range_x = np.arange(
+                speed_range_x = fn.get_full_range(
                     bottom_speed, angles_top_speed_index_map[steer_angle], speed_step)
 
                 actions.extend(create_full_speed_actions(

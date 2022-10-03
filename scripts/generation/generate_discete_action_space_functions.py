@@ -7,13 +7,13 @@ def create_actions_for_speeds(speed_range: np.array, angle: float, is_left=True)
     actions = []
     for speed in speed_range:
         actions.append({
-            "steering_angle": angle if is_left else -abs(angle),
+            "steering_angle": angle if is_left else -angle,
             "speed": speed
         },)
     return actions
 
 
-def create_direction_actions(steering_range: np.array, speed_range: np.array, full_speed_angle: int, speed_step: float, is_left: Boolean) -> list:
+def create_direction_actions(steering_range: np.array, speed_range: np.array, is_left: Boolean) -> list:
 
     if 0 in steering_range:
         raise Exception(
@@ -22,43 +22,57 @@ def create_direction_actions(steering_range: np.array, speed_range: np.array, fu
     bottom_speed = speed_range[0]
 
     actions = []
-    for angle in steering_range:
-        if angle <= full_speed_angle:
-            actions.extend(create_actions_for_speeds(
-                speed_range, angle, is_left))
-        else:
-            remaining_angles = find_remaining_angles(
-                steering_range, full_speed_angle)
 
-            angles_top_speed_index_map = get_top_speed_index_map(
-                remaining_angles, len(speed_range))
-            print(angles_top_speed_index_map)
-            for steer_angle in remaining_angles:
-                speed_range_remaining = np.arange(
-                    bottom_speed, angles_top_speed_index_map[steer_angle], speed_step)
+    angles_top_speed_index_map = get_top_speed_index_map(
+        steering_range, len(speed_range))
+    print('angles_top_speed_index_map', angles_top_speed_index_map)
 
-                actions.extend(create_actions_for_speeds(
-                    speed_range_remaining, steer_angle, is_left))
+    for steer_angle in steering_range:
+        print('bottom_speed', bottom_speed)
+        print('steer_angle', steer_angle)
+        steer_angle_speed_index = angles_top_speed_index_map[steer_angle]
+        print('steer_angle_speed_index', steer_angle_speed_index)
+        print('speed_range', speed_range)
+        steer_angle_speed = np.flip(speed_range)[
+            1 - steer_angle_speed_index]
+        print('steer_angle_speed', steer_angle_speed)
+        speed_range_remaining = get_full_range(
+            bottom_speed, steer_angle_speed, len(speed_range))
+        print('speed_range_remaining', speed_range_remaining)
+
+        actions.extend(create_actions_for_speeds(
+            speed_range_remaining, steer_angle, is_left))
 
     return actions
 
 
 def get_top_speed_index_map(remaining_angles: np.array, amount_of_speeds: int) -> dict:
+    """Gets a a map with steering angle and max speed index from another array
+
+    Args:
+        remaining_angles (np.array): The angles to map to the speed indexes
+        amount_of_speeds (int): Amount of speed indexes that need to be referenced to
+
+    Returns:
+        dict: With each key with the angle and the corresponding index reference
+    of a speed list
+    """
     angles_top_speed_index_map = {}
 
     amount_of_remaining_angles = len(remaining_angles)
     speed_index_step = amount_of_speeds/amount_of_remaining_angles
 
-    for index, ang in enumerate(remaining_angles):
-
+    for index, ang in enumerate(np.sort(remaining_angles)):
+        print(index)
         angles_top_speed_index_map.update(
-            {ang: math.ceil(index * speed_index_step)})
+            {
+                ang: math.floor((len(remaining_angles) - index) * speed_index_step)
+            })
     return angles_top_speed_index_map
 
 
 def find_remaining_angles(steering_range: np.array, full_speed_angle: float) -> np.array:
-    idx = find_nearest_idx(steering_range, full_speed_angle)
-    return steering_range[idx:]
+    return steering_range[steering_range > full_speed_angle]
 
 
 def find_nearest(array, value):
@@ -70,3 +84,7 @@ def find_nearest_idx(array, value) -> int:
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
+
+
+def get_full_range(start: float, stop: float, step: float) -> np.array:
+    return np.arange(start, stop + step, step)
