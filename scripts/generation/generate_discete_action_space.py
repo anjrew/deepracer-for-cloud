@@ -49,13 +49,8 @@ right_range = fn.get_full_range(0, abs(right), abs(right)/steering_step)[1:]
 speed_range = fn.get_full_range(
     bottom_speed, top_speed, (top_speed-bottom_speed) / speed_step)
 
-print('top_speed', top_speed)
-print('speed_range', speed_range)
-print('right_range', right_range)
-print('left_range', left_range)
 
 corner_speed_range = speed_range[:-1]
-print('corner_speed_range', corner_speed_range)
 actions = [
     # Create all speeds for angle of 0deg
     fn.create_actions_for_speeds(speed_range, 0),
@@ -66,7 +61,6 @@ actions = [
 ]
 
 actions = reduce(lambda x, y: x + y, actions)
-print(actions)
 
 def create_full_speed_actions(speed_range: np.array, angle: float) -> list:
     actions = []

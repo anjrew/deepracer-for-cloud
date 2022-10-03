@@ -51,7 +51,6 @@ def get_top_speed_index_map(remaining_angles: np.array, amount_of_speeds: int) -
     speed_index_step = amount_of_speeds/amount_of_remaining_angles
 
     for index, ang in enumerate(np.sort(remaining_angles)):
-        print(index)
         angles_top_speed_index_map.update(
             {
                 ang: math.floor((len(remaining_angles) - index) * speed_index_step)
