@@ -28,16 +28,11 @@ def create_direction_actions(steering_range: np.array, speed_range: np.array, is
     print('angles_top_speed_index_map', angles_top_speed_index_map)
 
     for steer_angle in steering_range:
-        print('bottom_speed', bottom_speed)
-        print('steer_angle', steer_angle)
         steer_angle_speed_index = angles_top_speed_index_map[steer_angle]
+        print('\nsteer_angle', steer_angle)
         print('steer_angle_speed_index', steer_angle_speed_index)
         print('speed_range', speed_range)
-        steer_angle_speed = np.flip(speed_range)[
-            1 - steer_angle_speed_index]
-        print('steer_angle_speed', steer_angle_speed)
-        speed_range_remaining = get_full_range(
-            bottom_speed, steer_angle_speed, len(speed_range))
+        speed_range_remaining = speed_range[:steer_angle_speed_index+1]
         print('speed_range_remaining', speed_range_remaining)
 
         actions.extend(create_actions_for_speeds(
