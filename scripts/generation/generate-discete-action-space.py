@@ -2,6 +2,18 @@ from functools import reduce
 import json
 from argparse import ArgumentParser, Namespace
 import numpy as np
+import math
+
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 parser = ArgumentParser()
 parser.add_argument("-i", "--input", dest="input",
@@ -31,15 +43,9 @@ right = steering_angle['low']
 
 actions = []
 
-left_range = range(0, left, steering_step)
-right_range = range(0, right, steering_step)
-speed_range = range(bottom_speed, top_speed, speed_step)
-
-
-def get_angles_top_speed(prev: dict, ang, speeds: list(int)) -> dict:
-    prev.update(
-        {ang: min(enumerate(speeds), key=lambda index, _: abs(i-index))})
-    return prev
+left_range = np.arange(0, left, steering_step)
+right_range = np.arange(0, right, steering_step)
+speed_range = np.arange(bottom_speed, top_speed, speed_step)
 
 
 for i, angle in enumerate(left_range):
@@ -56,23 +62,32 @@ for i, angle in enumerate(left_range):
         # angles_top_speed_map = [{'angle': ang, 'top_speed': min(enumerate(
         #     speed_list), key=lambda index, _: abs(i-index))} for i, ang in enumerate(remaining_angles)]
 
-        angles_top_speed_map = reduce(
-            lambda prev, next: get_angles_top_speed(prev, next, speed_list))
+        angles_top_speed_index_map = {}
+
+        amount_of_remaining_angles = len(remaining_angles)
+        amount_of_speeds = len(speed_list)
+        speed_index_step = amount_of_speeds/amount_of_remaining_angles
+
+        for index, ang in enumerate(remaining_angles):
+
+            angles_top_speed_index_map.update(
+                {ang: math.ceil(index * speed_index_step)})
 
         for steer_angle in remaining_angles:
-            speed_range_x = range(
-                bottom_speed, angles_top_speed_map[steer_angle], speed_step)
+            speed_range_x = np.arange(
+                bottom_speed, angles_top_speed_index_map[steer_angle], speed_step)
             for speed in speed_range_x:
                 actions.append({
                     "steering_angle": steer_angle,
                     "speed": speed
                 },)
-
+print(actions)
 meta_data['action_space_type'] = 'discrete'
-meta_data['action_space'] = action_space
+meta_data['action_space'] = list(actions)
+print(meta_data)
 
 with open('new_file.json', 'w') as f:
-    json.dump(meta_data, f, indent=2)
+    json.dump(meta_data, f, indent=2, cls=NpEncoder)
     print("New json file is created from data.json file")
 # # Iterating through the json
 # # list
