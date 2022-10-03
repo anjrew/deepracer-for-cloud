@@ -57,6 +57,11 @@ continuous_action_space = {
     }
 }
 
+assert "continuous" == vd.get_action_space_label(continuous_action_space)
+assert "discrete" != vd.get_action_space_label(continuous_action_space)
+assert "discrete" == vd.get_action_space_label(discrete_action_space)
+assert "continuous" != vd.get_action_space_label(discrete_action_space)
+assert "random" != vd.get_action_space_label(discrete_action_space)
 assert vd.check_valid_action_space_property("continuous", continuous_action_space)
 assert vd.check_valid_action_space_property("discrete", discrete_action_space)
 # assert vd.check_valid_action_space_property("discrete", {})
