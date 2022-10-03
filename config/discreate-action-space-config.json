@@ -1,13 +1,12 @@
 {
-    "steering": {
-        "left_deg": 30,
-        "right_deg": 30,
-        "grain_deg": 5
-    },
-    "speed": {
-        "min": 30,
-        "max": 30,
-        "step": 0.25
+    "action_space": {
+        "speed": {
+            "high": 4.0,
+            "low": 1.25
+        },
+        "steering_angle": {
+            "high": 30,
+            "low": -30
+        }
     }
-
 }
