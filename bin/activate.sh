@@ -195,6 +195,6 @@ function dr-reset {
 }
 
 function dr-create-action-space {
-  SCRIPT="$DIR/scripts/generation/generate_discete_action_space.py -i $DIR/config/discreate-action-space-config.json -o $DIR/custom_files/model_metadata.json"
+  SCRIPT="$DIR/scripts/generation/generate_discete_action_space.py -i $DIR/config/discreate-action-space-config.json -o $DIR/custom_files/model_metadata.json $@"
   python3 $SCRIPT || python $SCRIPT 
 }

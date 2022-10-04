@@ -27,7 +27,6 @@ parser.add_argument("-v", "--view", dest="view", action="store_true",
                     help="Show the action space in a graph")
 
 args = vars(parser.parse_args())
-print(args)
 
 # Opening JSON file
 input_file = open(args['input'])
@@ -84,8 +83,6 @@ if args['view'] == True:
     for ang in actions:
         x.append(int(ang['steering_angle']))
         y.append(int(ang['speed']))
-    # print(x)
-    # print(y)
     plt.scatter(x, y)
     plt.show()
 
