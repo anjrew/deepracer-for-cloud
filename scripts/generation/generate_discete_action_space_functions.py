@@ -1,6 +1,15 @@
+from functools import reduce
 from xmlrpc.client import Boolean
 import numpy as np
 import math
+
+
+def create_full_speed_angle_actions(full_speed_angle_range: np.array, speed_range: np.array,) -> list:
+    return reduce(lambda x, y: x + y, [
+        create_actions_for_speeds(speed_range, angle) for angle in full_speed_angle_range
+    ]) + reduce(lambda x, y: x + y, [
+        create_actions_for_speeds(speed_range, -angle) for angle in full_speed_angle_range
+    ])
 
 
 def create_actions_for_speeds(speed_range: np.array, angle: float, is_left=True) -> list:
@@ -53,7 +62,8 @@ def get_top_speed_index_map(remaining_angles: np.array, amount_of_speeds: int) -
     for index, ang in enumerate(np.sort(remaining_angles)):
         angles_top_speed_index_map.update(
             {
-                ang: math.floor((len(remaining_angles) - index) * speed_index_step)
+                ang: math.floor((len(remaining_angles) - index)
+                                * speed_index_step)
             })
     return angles_top_speed_index_map
 
@@ -75,3 +85,5 @@ def find_nearest_idx(array, value) -> int:
 
 def get_full_range(start: float, stop: float, step: float) -> np.array:
     return np.arange(start, stop + step, step)
+
+# def show_action_space
