@@ -57,7 +57,9 @@ speed_range: np.array = fn.get_full_range(
     bottom_speed, top_speed, (top_speed-bottom_speed) / speed_step)
 
 full_speed_angle_range = fn.get_full_range(
-    0, full_speed_angle, full_speed_angle/steering_step)
+    0, full_speed_angle, full_speed_angle - max(len(left_range), len(right_range)))
+ 
+
 
 
 corner_speed_range = speed_range[:-1]
