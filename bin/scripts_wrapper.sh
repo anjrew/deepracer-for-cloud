@@ -76,12 +76,6 @@ function dr-start-loganalysis {
   ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
 }
 
-
-function dr-start-my-loganalysis {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./start-mine.sh"
-}
-
-
 function dr-stop-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then

@@ -7,6 +7,6 @@ docker run --rm -d -p "8888:8888" \
 -v `pwd`/../../data/minio:/workspace/minio \
 --name loganalysis \
 --network sagemaker-local \
- awsdeepracercommunity/deepracer-analysis:$DR_ANALYSIS_IMAGE
+ $DR_ANALYSIS_IMAGE:$DR_ANALYSIS_IMAGE_TAG
 
 docker logs -f loganalysis
