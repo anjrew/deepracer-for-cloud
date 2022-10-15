@@ -198,3 +198,8 @@ function dr-create-action-space {
   SCRIPT="$DIR/scripts/generation/generate_discete_action_space.py -i $DIR/config/discreate-action-space-config.json -o $DIR/custom_files/model_metadata.json $@"
   python3 $SCRIPT || python $SCRIPT 
 }
+
+function dr-view-action-space {
+  SCRIPT="$DIR/scripts/action_space/view_action_space.py -f $DIR/custom_files/model_metadata.json $@"
+  python3 $SCRIPT || python $SCRIPT 
+}
