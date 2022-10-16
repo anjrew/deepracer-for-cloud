@@ -18,6 +18,9 @@ parser.add_argument("-b", "--bucket", dest="bucket",
 parser.add_argument("-p", "--prefix", dest="prefix",
                     help="The name of the prefix where the model is stored in the MinIO bucket (The model name)",  type=str ,default="rl-deepracer-sagemaker")
 
+parser.add_argument("-m", "--method", dest="method",
+                    help="Statistical value to be calculated. Examples are 'mean', 'median','min' & 'max'. Default: 'mean'.",  type=str ,default="mean")
+
 
 args = vars(parser.parse_args())
 
@@ -25,6 +28,7 @@ args = vars(parser.parse_args())
 BUCKET=args['bucket']
 PREFIX=args['prefix']
 
+method = args['method']
 refresh_time = args['refresh_time']
 rolling_average = args['rolling_average']
 linewidth = 2.0
@@ -42,15 +46,13 @@ def show_stats():
 
     train=tm.getTraining()
 
-    summary_df=tm.getSummary(method='mean', summary_index=['r-i','master_iteration'])
-
-    # print()
-    # print("Episodes: %i" % len(train))
+    summary_df=tm.getSummary(method=method, summary_index=['r-i','master_iteration'])
 
     fig, ((ax, ax2), (ax3, ax4)) = plt.subplots(ncols=2, nrows=2, figsize=(20,10))
-    # fig.suptitle('Current session')
-    fig.suptitle("Latest iteration: %s / master %i" % (max(train['r-i']),max(train['master_iteration'])), fontsize=16)
+    episodes_text = "Episodes: %i" % len(train)
+    iteration_text = "Latest iteration: %s / master %i" % (max(train['r-i']),max(train['master_iteration']))
 
+    fig.suptitle(f'{episodes_text} / {iteration_text}', fontsize=16)
     master_iteration_values = summary_df.index.get_level_values('master_iteration')
     train_completion = summary_df['train_completion']
     eval_completion = summary_df['eval_completion']
@@ -64,9 +66,9 @@ def show_stats():
 
 
     ax.title.set_text('Completion per iteration')
-    ax.plot(master_iteration_values, train_completion.rolling(10).mean(), linewidth)
-    ax.plot(master_iteration_values, eval_completion.rolling(10).mean(), linewidth)
-    ax.legend(['Training mean completion', 'Eval mean completion'])
+    ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth)
+    ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth)
+    ax.legend([f'Training {method} completion', 'Eval {method} completion'])
     ax.set_xlabel('Interation')
     ax.set_ylabel('% completion')
     ax.set_ylim(completion_min,completion_max)
