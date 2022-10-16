@@ -7,7 +7,7 @@ networks:
 
 services:
   minio:
-    image: ${DR_LOCAL_S3_IMAGE}
+    image: minio/minio
     ports:
       - "9000:9000"
     command: gateway azure
