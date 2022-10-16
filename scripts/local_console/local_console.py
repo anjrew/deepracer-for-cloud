@@ -1,31 +1,46 @@
 from deepracer.logs import metrics
 import matplotlib.pyplot as plt
-from threading import Timer
-import threading 
-import sched, time
-import numpy as np
+from argparse import ArgumentParser
+import time
 
-NUM_ROUNDS=1
 
-BUCKET="bucket"
-PREFIX="rl-deepracer-1"
+parser = ArgumentParser()
 
-refresh_time = 5.0
-rolling_average = 10
+parser.add_argument("-r", "--refresh-time", dest="refresh_time",
+                    help="The amount of time in seconds between the graph refreshing", type=int ,default=60)
+
+parser.add_argument("-rav", "--rolling-average", dest="rolling_average",
+                    help="The rolling average to use for the graph",  type=int ,default=20)
+
+parser.add_argument("-b", "--bucket", dest="bucket",
+                    help="The name of the MinIO bucket",  type=str ,default="bucket")
+
+parser.add_argument("-p", "--prefix", dest="prefix",
+                    help="The name of the prefix where the model is stored in the MinIO bucket (The model name)",  type=str ,default="rl-deepracer-sagemaker")
+
+
+args = vars(parser.parse_args())
+
+
+BUCKET=args['bucket']
+PREFIX=args['prefix']
+
+refresh_time = args['refresh_time']
+rolling_average = args['rolling_average']
 linewidth = 2.0
 
+plt.ion()
+plt.show(block=False)
 
 def show_stats(): 
     plt.clf()
     plt.cla()
     plt.close()
-    plt.show(block=False)
-    plt.ion()
+
         
     tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
 
     train=tm.getTraining()
-    ev=tm.getEvaluation()
 
     summary_df=tm.getSummary(method='mean', summary_index=['r-i','master_iteration'])
 
@@ -44,8 +59,8 @@ def show_stats():
     train_reward = summary_df['train_reward']
     eval_reward = summary_df['eval_reward']
 
-    summary_df['train_reward_completion'] = train_completion * train_reward
-    summary_df['eval_reward_completion'] = eval_completion * eval_reward
+    summary_df['train_reward_completion'] = (train_completion / 100) * train_reward
+    summary_df['eval_reward_completion'] = (eval_completion / 100) * eval_reward
 
 
     ax.title.set_text('Completion per iteration')
@@ -72,8 +87,12 @@ def show_stats():
     # plt.ion()
     # plt.draw()
     # plt.show()
-    plt.draw() 
-    plt.pause(0.01)
+    
+    # plt.draw() 
+    # plt.pause(0.01)
+    
+    fig.canvas.draw()
+    fig.canvas.flush_events()
     
 def view_stat_stream():
   while True:
