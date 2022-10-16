@@ -1,0 +1,4 @@
+{
+  "scripts/validation/validate_model_metadata_json_functions_test.py": true,
+  "scripts/generation/generate_discete_action_space_functions_test.py::test_findin_remaining_angles": true
+}

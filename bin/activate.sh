@@ -203,3 +203,9 @@ function dr-view-action-space {
   SCRIPT="$DIR/scripts/action_space/view_action_space.py -f $DIR/custom_files/model_metadata.json $@"
   python3 $SCRIPT || python $SCRIPT 
 }
+
+
+function dr-view-local-console {
+  SCRIPT="$DIR/scripts/local_console/local_console.py $@"
+  python3 $SCRIPT || python $SCRIPT 
+}
