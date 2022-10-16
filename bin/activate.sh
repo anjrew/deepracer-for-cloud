@@ -206,6 +206,6 @@ function dr-view-action-space {
 
 
 function dr-view-local-console {
-  SCRIPT="$DIR/scripts/local_console/local_console.py $@"
+  SCRIPT="$DIR/scripts/local_console/local_console.py -p $DR_LOCAL_S3_MODEL_PREFIX $@"
   python3 $SCRIPT || python $SCRIPT 
 }
