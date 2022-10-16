@@ -28,7 +28,7 @@ args = vars(parser.parse_args())
 BUCKET=args['bucket']
 PREFIX=args['prefix']
 
-method = args['method']
+ag_method = args['method']
 refresh_time = args['refresh_time']
 rolling_average = args['rolling_average']
 linewidth = 2.0
@@ -46,7 +46,7 @@ def show_stats():
 
     train=tm.getTraining()
 
-    summary_df=tm.getSummary(method=method, summary_index=['r-i','master_iteration'])
+    summary_df=tm.getSummary(method=ag_method, summary_index=['r-i','master_iteration'])
 
     fig, ((ax, ax2), (ax3, ax4)) = plt.subplots(ncols=2, nrows=2, figsize=(20,10))
     episodes_text = "Episodes: %i" % len(train)
@@ -56,6 +56,7 @@ def show_stats():
     master_iteration_values = summary_df.index.get_level_values('master_iteration')
     train_completion = summary_df['train_completion']
     eval_completion = summary_df['eval_completion']
+    average_completion = summary_df[['train_completion','eval_completion']].mean(axis='columns')
     completion_max = max([train_completion.max(), eval_completion.max()])
     completion_min = min([train_completion.min(), eval_completion.min()])
     train_reward = summary_df['train_reward']
@@ -68,7 +69,8 @@ def show_stats():
     ax.title.set_text('Completion per iteration')
     ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth)
     ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth)
-    ax.legend([f'Training {method} completion', 'Eval {method} completion'])
+    ax.plot(master_iteration_values, average_completion.rolling(rolling_average).mean(), linewidth)
+    ax.legend([f'Training {ag_method} completion', f'Eval {ag_method} completion', f'Average {ag_method} completion'])
     ax.set_xlabel('Interation')
     ax.set_ylabel('% completion')
     ax.set_ylim(completion_min,completion_max)
@@ -83,16 +85,11 @@ def show_stats():
     ax3.title.set_text('Reward/Completion per iteration')
     ax3.plot(master_iteration_values, summary_df['train_reward_completion'].rolling(rolling_average).mean(), linewidth=2.0)
     ax3.plot(master_iteration_values, summary_df['eval_reward_completion'].rolling(rolling_average).mean(), linewidth=2.0)
-    ax3.legend(['Train Reward/Completion', 'Eval Reward/Completion'])
+    ax3.plot(master_iteration_values, summary_df[['train_reward_completion','eval_reward_completion']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=2.0)
+    ax3.legend(['Train Reward/Completion', 'Eval Reward/Completion', 'Average Reward/Completion'])
     ax3.set_xlabel('Interation')
     ax3.set_ylabel('Reward/Completion')
-    # plt.ion()
-    # plt.draw()
-    # plt.show()
-    
-    # plt.draw() 
-    # plt.pause(0.01)
-    
+
     fig.canvas.draw()
     fig.canvas.flush_events()
     
