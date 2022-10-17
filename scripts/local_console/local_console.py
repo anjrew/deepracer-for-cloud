@@ -97,15 +97,7 @@ def view_stat_stream():
   while True:
     show_stats()
     time.sleep(refresh_time)
-#arguments: 
-#how long to wait (in seconds), 
-#what function to call, 
-#what gets passed in
-# r = Timer(refresh_time, show_stats())
 
-# r.start()
+
 view_stat_stream()
 
-# t1 = threading.Thread(target=view_stat_stream)  
-
-# t1.start()
