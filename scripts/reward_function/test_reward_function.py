@@ -30,7 +30,7 @@ fake = Faker()
 
 def create_random_params() -> dict:
     return {
-        "all_wheels_on_track": bool(random.getrandbits(1)),                                         # flag to indicate if the agent is on the track
+        "all_wheels_on_track": True,                                         # flag to indicate if the agent is on the track
         "x": random.uniform(0, 75.5),                                                               # agent's x-coordinate in meters
         "y": random.uniform(0, 75.5),                                                               # agent's y-coordinate in meters
         "closest_objects": [random.randint(0, 9), random.randint(0, 9)],                            # zero-based indices of the two closest objects to the agent's current position of (x, y).

@@ -209,3 +209,8 @@ function dr-view-local-console {
   SCRIPT="$DIR/scripts/local_console/local_console.py -p $DR_LOCAL_S3_MODEL_PREFIX $@"
   python3 $SCRIPT || python $SCRIPT 
 }
+
+function dr-view-local-console {
+  SCRIPT="$DIR/scripts/reward_function/test_reward_function.py --f '/home/aj/aws-deep-racer/deepracer-for-cloud/custom_files/reward_function.py' $@"
+  python3 $SCRIPT || python $SCRIPT 
+} 
