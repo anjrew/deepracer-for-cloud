@@ -3,6 +3,7 @@ from faker import Faker
 import numpy as np
 from argparse import ArgumentParser
 import sys
+import os
 
 
 parser = ArgumentParser()
@@ -16,7 +17,11 @@ parser.add_argument("-t", "--tests", dest="tests",
 args = vars(parser.parse_args())
 
 reward_file_path = args['file']
-sys.path.insert(1, reward_file_path)
+
+reward_file_directory = os.path.dirname(reward_file_path)
+
+sys.path.insert(1, reward_file_directory)
+
 from reward_function import reward_function
 
 tests = args['tests']
@@ -65,5 +70,5 @@ print(f'\nThe reward results are\n',)
 for result in results:
     print('\nA reward was given:', result['reward'])
     for key, value in result['params'].items():
-        if key is not 'waypoints':
+        if key != 'waypoints':
             print(f'{key}:', value)
