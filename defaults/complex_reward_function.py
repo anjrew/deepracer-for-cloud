@@ -1,4 +1,3 @@
-from functools import reduce
 import math
 
 
@@ -173,4 +172,4 @@ def reward_function(params: dict):
         reward += result
 
     # Always return a float value
-    return reduce(reward)
+    return reward
