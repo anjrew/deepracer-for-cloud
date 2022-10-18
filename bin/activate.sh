@@ -210,7 +210,7 @@ function dr-view-local-console {
   python3 $SCRIPT || python $SCRIPT 
 }
 
-function dr-view-local-console {
-  SCRIPT="$DIR/scripts/reward_function/test_reward_function.py --f '/home/aj/aws-deep-racer/deepracer-for-cloud/custom_files/reward_function.py' $@"
+function dr-test-reward-function {
+  SCRIPT="$DIR/scripts/reward_function/test_reward_function.py --f /home/aj/aws-deep-racer/deepracer-for-cloud/custom_files/reward_function.py $@"
   python3 $SCRIPT || python $SCRIPT 
 } 

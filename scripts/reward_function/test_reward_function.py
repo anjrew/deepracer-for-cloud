@@ -14,13 +14,24 @@ parser.add_argument("-f", "--file", dest="file",
 parser.add_argument("-t", "--tests", dest="tests",
                     help="The number of tests to carry out", type=int, default=3)
 
+parser.add_argument("-s", "--speed", dest="speed",
+                    help="Test out the speed parameter", type=int, default=0)
+
 args = vars(parser.parse_args())
 
 reward_file_path = args['file']
+speed = args['speed']
 
-reward_file_directory = os.path.dirname(reward_file_path)
+reward_file_directory = os.path.dirname(reward_file_path).replace('\'','')
 
-sys.path.insert(1, reward_file_directory)
+# sys.path.insert(1, reward_file_directory)
+# sys.path.insert(0, os.path.abspath(reward_file_directory))
+print('reward_file_path', reward_file_path)
+print('reward_file_directory', reward_file_directory)
+print('reward_file_directory_type', type(reward_file_directory))
+sys.path.append(reward_file_directory)
+
+print('sys.path', sys.path)
 
 from reward_function import reward_function
 
@@ -57,18 +68,32 @@ def create_random_params() -> dict:
  
 
 results = []   
-    
-for test in range(0, tests):
+
+if speed <= 0:
+    print('Testing Random Parameters')
+    for test in range(0, tests):
+        params = create_random_params()
+        results.append({
+            'params': params,
+            'reward': reward_function(params)
+        })
+
+else:
+    print('Testing speeds up to:', speed)
     params = create_random_params()
-    results.append({
-        'params': params,
-        'reward': reward_function(params)
-    })
+    for s in range(0, speed, 1):
+        params['speed'] = s
+        results.append({
+            'speed': s,
+            'reward': reward_function(params)
+        })
+        
 
 print(f'\nThe reward results are\n',)
 
 for result in results:
     print('\nA reward was given:', result['reward'])
-    for key, value in result['params'].items():
-        if key != 'waypoints':
-            print(f'{key}:', value)
+    for key, value in result.items():
+        print(f'{key}:', value)
+
+        

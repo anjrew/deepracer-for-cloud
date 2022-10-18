@@ -1,6 +1,8 @@
+from cProfile import label
 from deepracer.logs import metrics
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
+from collections import OrderedDict
 import time
 
 
@@ -53,6 +55,7 @@ def show_stats():
     iteration_text = "Latest iteration: %s / master %i" % (max(train['r-i']),max(train['master_iteration']))
 
     fig.suptitle(f'{episodes_text} / {iteration_text}', fontsize=16)
+    
     master_iteration_values = summary_df.index.get_level_values('master_iteration')
     train_completion = summary_df['train_completion']
     eval_completion = summary_df['eval_completion']
@@ -67,20 +70,30 @@ def show_stats():
 
 
     ax.title.set_text('Completion per iteration')
-    ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth)
-    ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth)
-    ax.plot(master_iteration_values, average_completion.rolling(rolling_average).mean(), linewidth)
-    ax.legend([f'Training {ag_method} completion', f'Eval {ag_method} completion', f'Average {ag_method} completion'])
+    
+    training_method_completion_label = f'Training {ag_method} completion'
+    eval_method_completion_label = f'Eval {ag_method} completion'
+    av_method_label = f'Average {ag_method} completion'
+    by_label = {
+      training_method_completion_label: "blue",
+      eval_method_completion_label:"orange",
+      av_method_label: "purple"
+    }
+    
+    ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth, label=training_method_completion_label, color=by_label[training_method_completion_label])
+    ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth, label=eval_method_completion_label, color=by_label[eval_method_completion_label])
+    ax.plot(master_iteration_values, average_completion.rolling(rolling_average).mean(), linewidth, label=av_method_label, color=by_label[av_method_label])
     ax.set_xlabel('Interation')
-    ax.set_ylabel('% completion')
-    ax.set_ylim(completion_min,completion_max)
+    ax.set_ylabel('% Completion')
+    
+    ax.legend(by_label)
 
     ax2.title.set_text('Reward vs Completion')
     ax2.scatter(train_completion, summary_df['train_reward'], linewidth)
     ax2.scatter(eval_completion, summary_df['eval_reward'], linewidth)
     ax2.legend(['Training', 'Evaluation'])
     ax2.set_ylabel('Reward')
-    ax2.set_xlabel('% completion')
+    ax2.set_xlabel('% Completion')
 
     ax3.title.set_text('Reward/Completion per iteration')
     ax3.plot(master_iteration_values, summary_df['train_reward_completion'].rolling(rolling_average).mean(), linewidth=2.0)

@@ -177,7 +177,7 @@ fi
 
 # Trigger requested log-file
 if [[ "${OPT_DISPLAY,,}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
-  dr-logs-sagemaker -w 15
+  dr-logs-sagemaker -w 20
   if [ "${DR_WORKERS}" -gt 1 ]; then
     for i in $(seq 1 ${DR_WORKERS})
     do
@@ -189,6 +189,6 @@ if [[ "${OPT_DISPLAY,,}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "tru
 elif [[ "${OPT_DISPLAY,,}" == "robomaker" ]]; then
   dr-logs-robomaker -w 15 -n $OPT_ROBOMAKER
 elif [[ "${OPT_DISPLAY,,}" == "sagemaker" ]]; then
-  dr-logs-sagemaker -w 15
+  dr-logs-sagemaker -w 20
 fi
 
