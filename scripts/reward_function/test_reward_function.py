@@ -1,5 +1,4 @@
 import random
-from faker import Faker
 import numpy as np
 from argparse import ArgumentParser
 import sys
@@ -14,62 +13,97 @@ parser.add_argument("-f", "--file", dest="file",
 parser.add_argument("-t", "--tests", dest="tests",
                     help="The number of tests to carry out", type=int, default=3)
 
-parser.add_argument("-s", "--speed", dest="speed",
-                    help="Test out the speed parameter", type=int, default=0)
+parser.add_argument("-v", "--value", dest="value",
+                    help="The value of the parameter to test", type=int, default=0)
+
+parser.add_argument("-p", "--param", dest="param",
+                    help="The numeric parameter to test", type=str, default=None)
+
+parser.add_argument("-r", "--random-seed", dest="random_seed",
+                    help="The random seed for the random parameters", type=int, default=1)
+
 
 args = vars(parser.parse_args())
 
 reward_file_path = args['file']
-speed = args['speed']
 
-reward_file_directory = os.path.dirname(reward_file_path).replace('\'','')
+value = args['value']
+param = args['param']
+
+random.seed(args['random_seed'])
+
+reward_file_directory = os.path.dirname(reward_file_path).replace('\'', '')
 
 # sys.path.insert(1, reward_file_directory)
-# sys.path.insert(0, os.path.abspath(reward_file_directory))
+sys.path.insert(0, reward_file_directory)
 print('reward_file_path', reward_file_path)
 print('reward_file_directory', reward_file_directory)
 print('reward_file_directory_type', type(reward_file_directory))
-sys.path.append(reward_file_directory)
-
-print('sys.path', sys.path)
+# sys.path.append(reward_file_directory)
 
 from reward_function import reward_function
 
+
+print('sys.path', sys.path)
+
+
 tests = args['tests']
 
-fake = Faker()
 
 def create_random_params() -> dict:
     return {
-        "all_wheels_on_track": True,                                         # flag to indicate if the agent is on the track
-        "x": random.uniform(0, 75.5),                                                               # agent's x-coordinate in meters
-        "y": random.uniform(0, 75.5),                                                               # agent's y-coordinate in meters
-        "closest_objects": [random.randint(0, 9), random.randint(0, 9)],                            # zero-based indices of the two closest objects to the agent's current position of (x, y).
-        "closest_waypoints": [random.randint(0, 9), random.randint(0, 9)],                          # indices of the two nearest waypoints.
-        "distance_from_center": random.uniform(0, 75.5),                                            # distance in meters from the track center 
-        "is_crashed": bool(random.getrandbits(1)),                                                  # Boolean flag to indicate whether the agent has crashed.
-        "is_left_of_center": bool(random.getrandbits(1)),                                           # Flag to indicate if the agent is on the left side to the track center or not. 
-        "is_offtrack": bool(random.getrandbits(1)),                                                 # Boolean flag to indicate whether the agent has gone off track.
-        "is_reversed": bool(random.getrandbits(1)),                                                 # flag to indicate if the agent is driving clockwise (True) or counter clockwise (False).
-        "heading": random.uniform(0, 360),                                                          # agent's yaw in degrees
-        "objects_distance": np.random.uniform(0, 360),                                              # list of the objects' distances in meters between 0 and track_length in relation to the starting line.
-        "objects_heading": np.random.uniform(0, 360),                                               # list of the objects' headings in degrees between -180 and 180.
-        "objects_left_of_center": [bool(random.getrandbits(1)), ] * 5,                              # list of Boolean flags indicating whether elements' objects are left of the center (True) or not (False).
-        "objects_location": [( random.uniform(0, 75.5),  random.uniform(0, 75.5)),],                # list of object locations [(x,y), ...].
-        "objects_speed": [ random.uniform(0, 75.5), ],                                              # list of the objects' speeds in meters per second.
-        "progress":  random.uniform(0, 100),                                                        # percentage of track completed
-        "speed":  random.uniform(0, 5),                                                             # agent's speed in meters per second (m/s)
-        "steering_angle": random.uniform(-45, 45),                                                  # agent's steering angle in degrees
-        "steps": random.randint(0, 2000),                                                           # number steps completed
-        "track_length": random.uniform(12, 100),                                                    # track length in meters.
-        "track_width": random.uniform(5, 10),                                                       # width of the track
-        "waypoints": [(random.uniform(5, 10), random.uniform(5, 10)), ] * 100                       # list of (x,y) as milestones along the track center
+        # flag to indicate if the agent is on the track
+        "all_wheels_on_track": True,
+        # agent's x-coordinate in meters
+        "x": random.uniform(0, 75.5),
+        # agent's y-coordinate in meters
+        "y": random.uniform(0, 75.5),
+        # zero-based indices of the two closest objects to the agent's current position of (x, y).
+        "closest_objects": [random.randint(0, 9), random.randint(0, 9)],
+        # indices of the two nearest waypoints.
+        "closest_waypoints": [random.randint(0, 9), random.randint(0, 9)],
+        # distance in meters from the track center
+        "distance_from_center": random.uniform(0, 75.5),
+        # Boolean flag to indicate whether the agent has crashed.
+        "is_crashed": bool(random.getrandbits(1)),
+        # Flag to indicate if the agent is on the left side to the track center or not.
+        "is_left_of_center": bool(random.getrandbits(1)),
+        # Boolean flag to indicate whether the agent has gone off track.
+        "is_offtrack": bool(random.getrandbits(1)),
+        # flag to indicate if the agent is driving clockwise (True) or counter clockwise (False).
+        "is_reversed": bool(random.getrandbits(1)),
+        # agent's yaw in degrees
+        "heading": random.uniform(0, 360),
+        # list of the objects' distances in meters between 0 and track_length in relation to the starting line.
+        "objects_distance": np.random.uniform(0, 360),
+        # list of the objects' headings in degrees between -180 and 180.
+        "objects_heading": np.random.uniform(0, 360),
+        # list of Boolean flags indicating whether elements' objects are left of the center (True) or not (False).
+        "objects_left_of_center": [bool(random.getrandbits(1)), ] * 5,
+        # list of object locations [(x,y), ...].
+        "objects_location": [(random.uniform(0, 75.5),  random.uniform(0, 75.5)), ],
+        # list of the objects' speeds in meters per second.
+        "objects_speed": [random.uniform(0, 75.5), ],
+        # percentage of track completed
+        "progress":  random.uniform(0, 100),
+        # agent's speed in meters per second (m/s)
+        "speed":  random.uniform(0, 5),
+        # agent's steering angle in degrees
+        "steering_angle": random.uniform(-45, 45),
+        # number steps completed
+        "steps": random.randint(0, 2000),
+        # track length in meters.
+        "track_length": random.uniform(12, 100),
+        # width of the track
+        "track_width": random.uniform(5, 10),
+        # list of (x,y) as milestones along the track center
+        "waypoints": [(random.uniform(5, 10), random.uniform(5, 10)), ] * 100
     }
- 
 
-results = []   
 
-if speed <= 0:
+results = []
+
+if param is None:
     print('Testing Random Parameters')
     for test in range(0, tests):
         params = create_random_params()
@@ -79,21 +113,20 @@ if speed <= 0:
         })
 
 else:
-    print('Testing speeds up to:', speed)
+    print(f'Testing "{param}" up to:', value)
     params = create_random_params()
-    for s in range(0, speed, 1):
-        params['speed'] = s
+    for val in range(0, value, 1):
+        params[param] = val
         results.append({
-            'speed': s,
+            param: val,
             'reward': reward_function(params)
         })
-        
+
 
 print(f'\nThe reward results are\n',)
 
 for result in results:
     print('\nA reward was given:', result['reward'])
     for key, value in result.items():
-        print(f'{key}:', value)
-
-        
+        if key != 'params':
+            print(f'{key}:', value)
