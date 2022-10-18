@@ -7,7 +7,17 @@ import sys
 import os
 
 
-parser = ArgumentParser()
+parser = ArgumentParser(
+    description='''
+        Run Tests on the given reward function
+        
+        Examples: 
+        - Test steering angle reward: > dr-test-reward-function -p steering_angle -v 45 -sh
+        - Test distance from center reward: > dr-test-reward-function -p distance_from_center -v 50 -tw 100 -sh
+        - Test progress reward: > dr-test-reward-function -p progress -v 100 -sh
+        - Test speed reward: > dr-test-reward-function -p speed -v 5 -sh
+    ''',
+)
 
 parser.add_argument("-f", "--file", dest="file",
                     help="The path to the reward file for testing", type=str, metavar="file_path", default='/home/aj/aws-deep-racer/deepracer-for-cloud/custom_files')
@@ -26,6 +36,9 @@ parser.add_argument("-r", "--random-seed", dest="random_seed",
 
 parser.add_argument("-sh", "--show",
                     help="View the result in the graph", dest='show', action='store_true')
+
+parser.add_argument("-tw", "--track-width",
+                    help="Set the width of the track", dest='track_width', type=int, default=1)
  
  
 
@@ -138,5 +151,8 @@ for result in results:
             print(f'{key}:', value)
 
 if show is True:
+    plt.title(f'{param} vs Reward')
     plt.plot(list(map(lambda x: x['reward'] ,results)))
+    plt.xlabel(param)
+    plt.ylabel('Reward')
     plt.show()
