@@ -2,7 +2,6 @@ from cProfile import label
 from deepracer.logs import metrics
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
-from collections import OrderedDict
 import time
 
 

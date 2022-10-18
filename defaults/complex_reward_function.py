@@ -1,3 +1,4 @@
+from functools import reduce
 import math
 
 
@@ -70,18 +71,24 @@ def speed_reward(params: dict, weight=1, max_speed = 5, min_speed = 1):
     current_speed = params.get('speed', 0) 
     if current_speed > max_speed or current_speed < min_speed:
         return 0
-    return (current_speed / max_speed) * weight
+    else:
+        return (current_speed / max_speed) * weight
 
 
 def progress_reward(params: dict, weight=1):
+    max_progress = 100
+    progress = params.get('progress', 0)
+    return (((progress / max_progress) * 10) * weight) ** 2
+
+## TODO Steps reward
+def steps_reward(params: dict, weight=1):
     steps = params.get('steps', 0)
     max_progress = 100
     if steps <= 5:
         return 0  # ignore progress in the first 5 steps
     else:
         progress = params.get('progress', 0)
-        return (progress / max_progress / steps) * weight
-
+        return (((progress / max_progress) * 100 / steps) * weight) ** 2
 
 def get_quick_laptime_reward(params: dict, weight=1):
     """Gets the reward for completing a lap quickly
@@ -159,9 +166,9 @@ def reward_function(params: dict):
         return reward
 
     reward_results = [
-        direction_reward(params, 1),
-        speed_reward(params, 1, max_speed=3.5),
-        progress_reward(params, 100),
+        direction_reward(params, 2),
+        speed_reward(params, 10, max_speed=3.5),
+        progress_reward(params, 1),
         get_quick_laptime_reward(params, 2),
         get_complete_lap(params, 3),
         steering_reward_function(params, 1, max_steering_angle=35)

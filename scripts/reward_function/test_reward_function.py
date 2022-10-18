@@ -1,6 +1,8 @@
 import random
 import numpy as np
 from argparse import ArgumentParser
+import argparse
+import matplotlib.pyplot as plt
 import sys
 import os
 
@@ -22,6 +24,11 @@ parser.add_argument("-p", "--param", dest="param",
 parser.add_argument("-r", "--random-seed", dest="random_seed",
                     help="The random seed for the random parameters", type=int, default=1)
 
+parser.add_argument("-sh", "--show",
+                    help="View the result in the graph", dest='show', action='store_true')
+ 
+ 
+
 
 args = vars(parser.parse_args())
 
@@ -29,6 +36,9 @@ reward_file_path = args['file']
 
 value = args['value']
 param = args['param']
+show = args.get('show')
+track_width = args.get('track_width')
+print(args)
 
 random.seed(args['random_seed'])
 
@@ -36,16 +46,9 @@ reward_file_directory = os.path.dirname(reward_file_path).replace('\'', '')
 
 # sys.path.insert(1, reward_file_directory)
 sys.path.insert(0, reward_file_directory)
-print('reward_file_path', reward_file_path)
-print('reward_file_directory', reward_file_directory)
-print('reward_file_directory_type', type(reward_file_directory))
-# sys.path.append(reward_file_directory)
+
 
 from reward_function import reward_function
-
-
-print('sys.path', sys.path)
-
 
 tests = args['tests']
 
@@ -103,10 +106,15 @@ def create_random_params() -> dict:
 
 results = []
 
+params = create_random_params()
+if track_width is not None:
+    params['track_width'] = track_width
+
+
+
 if param is None:
     print('Testing Random Parameters')
     for test in range(0, tests):
-        params = create_random_params()
         results.append({
             'params': params,
             'reward': reward_function(params)
@@ -114,7 +122,6 @@ if param is None:
 
 else:
     print(f'Testing "{param}" up to:', value)
-    params = create_random_params()
     for val in range(0, value, 1):
         params[param] = val
         results.append({
@@ -126,7 +133,10 @@ else:
 print(f'\nThe reward results are\n',)
 
 for result in results:
-    print('\nA reward was given:', result['reward'])
     for key, value in result.items():
         if key != 'params':
             print(f'{key}:', value)
+
+if show is True:
+    plt.plot(list(map(lambda x: x['reward'] ,results)))
+    plt.show()
