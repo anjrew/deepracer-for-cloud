@@ -67,6 +67,11 @@ tests = args['tests']
 
 
 def create_random_params() -> dict:
+    
+    track_width = random.uniform(5, 10)
+    distance_from_center = random.uniform(0, track_width/2)
+    
+    
     return {
         # flag to indicate if the agent is on the track
         "all_wheels_on_track": True,
@@ -79,7 +84,7 @@ def create_random_params() -> dict:
         # indices of the two nearest waypoints.
         "closest_waypoints": [random.randint(0, 9), random.randint(0, 9)],
         # distance in meters from the track center
-        "distance_from_center": random.uniform(0, 75.5),
+        "distance_from_center": distance_from_center,
         # Boolean flag to indicate whether the agent has crashed.
         "is_crashed": bool(random.getrandbits(1)),
         # Flag to indicate if the agent is on the left side to the track center or not.
@@ -111,7 +116,7 @@ def create_random_params() -> dict:
         # track length in meters.
         "track_length": random.uniform(12, 100),
         # width of the track
-        "track_width": random.uniform(5, 10),
+        "track_width": track_width,
         # list of (x,y) as milestones along the track center
         "waypoints": [(random.uniform(5, 10), random.uniform(5, 10)), ] * 100
     }
