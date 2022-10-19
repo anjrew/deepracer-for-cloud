@@ -86,7 +86,7 @@ def create_random_params() -> dict:
         # distance in meters from the track center
         "distance_from_center": distance_from_center,
         # Boolean flag to indicate whether the agent has crashed.
-        "is_crashed": bool(random.getrandbits(1)),
+        "is_crashed": False,
         # Flag to indicate if the agent is on the left side to the track center or not.
         "is_left_of_center": bool(random.getrandbits(1)),
         # Boolean flag to indicate whether the agent has gone off track.
