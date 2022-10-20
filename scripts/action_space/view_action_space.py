@@ -10,9 +10,7 @@ args = vars(parser.parse_args())
 
 
 input_file = open(args['file'])
-# input_file = open('./config/discreate-action-space-config.json')
-# # returns JSON object as
-# # a dictionary
+
 meta_data = json.load(input_file)
 action_space = meta_data['action_space']
 
@@ -20,7 +18,11 @@ print('Creating action space graph')
 x = []
 y = []
 for ang in action_space:
-    x.append(int(ang['steering_angle']))
-    y.append(int(ang['speed']))
+    x.append(ang['steering_angle'])
+    y.append(ang['speed'])
+    
+
+plt.xlabel('Steering Angle')
+plt.ylabel('Speed')
 plt.scatter(x, y)
 plt.show()

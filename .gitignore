@@ -14,3 +14,8 @@ autorun.s3url
 nohup.out
 tracks/
 *.tar
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
