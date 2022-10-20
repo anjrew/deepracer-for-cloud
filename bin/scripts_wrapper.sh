@@ -46,6 +46,7 @@ function dr-download-custom-files {
 
 function dr-start-training {
   dr-update-env
+  dr-upload-custom-files
   $DR_DIR/scripts/training/start.sh "$@"
 }
 
