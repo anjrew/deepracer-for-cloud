@@ -39,9 +39,12 @@ parser.add_argument("-sh", "--show",
 
 parser.add_argument("-tw", "--track-width",
                     help="Set the width of the track", dest='track_width', type=int, default=1)
- 
- 
 
+parser.add_argument("-pr", "--progress",
+                    help="Fix the progress when testing another parameter", dest='progress', type=int)
+
+parser.add_argument("-kv", "--key-value",
+                    help="Add key value pairs to be added to the reward. Add like in a URL query string 'speed=100&progress=0'", dest='key_values', type=str)
 
 args = vars(parser.parse_args())
 
@@ -49,9 +52,14 @@ reward_file_path = args['file']
 
 value = args['value']
 param = args['param']
+progress = args['progress']
+key_values = args.get('key_values')
 show = args.get('show')
 track_width = args.get('track_width')
 print(args)
+
+if key_values is not None:
+    key_values = list(map(lambda x: x.split('=', maxsplit=1) ,key_values.split('&', maxsplit=1)))
 
 random.seed(args['random_seed'])
 
@@ -125,6 +133,12 @@ def create_random_params() -> dict:
 results = []
 
 params = create_random_params()
+
+if progress is not None:
+    params['progress'] = progress
+
+print('Using base params for testing', params)
+
 if track_width is not None:
     params['track_width'] = track_width
 
