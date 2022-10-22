@@ -111,7 +111,7 @@
 <body>
     <div class="container">
         <div class="navbar">
-            <div class="navbar-header">DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX - $TOPIC</div>
+            <div class="navbar-header">DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX $TOPIC</div>
             <div class="select-options">
                 <div class="select">
                     <label for="robo-select">Robomaker:</label>
@@ -142,18 +142,18 @@
         ];
 
         var cameras = [
-            // {
-            //     id: "camera",
-            //     topic: "/racecar/camera/zed/rgb/image_rect_color",
-            // },
-            // {
-            //     id: "main_camera",
-            //     topic: "/racecar/main_camera/zed/rgb/image_rect_color",
-            // },
-            // {
-            //     id: "sub_camera",
-            //     topic: "/sub_camera/zed/rgb/image_rect_color",
-            // },
+            {
+                id: "camera",
+                topic: "/racecar/camera/zed/rgb/image_rect_color",
+            },
+            {
+                id: "main_camera",
+                topic: "/racecar/main_camera/zed/rgb/image_rect_color",
+            },
+            {
+                id: "sub_camera",
+                topic: "/sub_camera/zed/rgb/image_rect_color",
+            },
             {
                 id: "kvs_stream",
                 topic: "/racecar/deepracer/kvs_stream",
@@ -205,20 +205,22 @@
             let mainContainer = document.getElementById('main-container')
             let cameraCards = document.querySelectorAll('.card')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
-            let roboSelection = document.getElementById('robo-select').value
+            let roboSelectionValue = document.getElementById('robo-select').value
             urlRoboSelection = urlSearchParams.get('robo')
-            roboSelection = urlRoboSelection || roboSelection
+            console.log('The robo selection is',urlRoboSelection)
+            roboSelectionValue = urlRoboSelection || roboSelectionValue
+            console.log('The robo after assignment is',urlRoboSelection)
             let cameraSelectionEl = document.getElementById('camera-select')
-            let cameraSelection = cameraSelectionEl.value
-            cameraSelection = urlSearchParams.get('camera') || cameraSelection
+            let cameraSelectionValue = cameraSelectionEl.value
+            cameraSelectionValue = urlSearchParams.get('camera') || cameraSelectionValue
             let cameraAllSelectEl = cameraSelectionEl.querySelector('.all-select')
             let cameraSelectTopEl = cameraSelectionEl.querySelectorAll('option')[1]
             let qualityVal = document.getElementById('camera-quality').value
 
             mainContainer.innerHTML = ''
 
-            if (roboSelection === 'all') {
-                if (cameraSelection === 'all') {
+            if (roboSelectionValue === 'all') {
+                if (cameraSelectionValue === 'all') {
                     cameraAllSelectEl.classList.add('hide')
                     cameraAllSelectEl.value = cameraSelectTopEl.value
                 }
@@ -227,7 +229,7 @@
             }
 
             let robomakerSections = robomakerContainers
-                .filter((robo) => roboSelection === 'all' || roboSelection === robo)
+                .filter((robo) => roboSelectionValue === 'all' || roboSelectionValue === robo)
                 .map(robo => {
                     let roboMaker = document.createElement('div')
                     roboMaker.classList.add('robo-maker')
@@ -240,7 +242,7 @@
                     roboCameras.classList.add('robo-camera-group')
 
                     let camerasToShow = cameras
-                        .filter((cam) => cameraSelection === 'all' || cameraSelection === cam.id)
+                        .filter((cam) => cameraSelectionValue === 'all' || cameraSelectionValue === cam.id)
 
                     camerasToShow.forEach(camera => {
                         // Create div
