@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 usage(){
-	echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality] -b [browser-command]"
+	echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality] -b [browser-command] -p [port]"
   echo "       -w        Width of individual stream."
   echo "       -h        Heigth of individual stream."
   echo "       -q        Quality of the stream image."
   echo "       -t        Topic to follow - default /racecar/deepracer/kvs_stream"
   echo "       -b        Browser command (default: firefox --new-tab)"
+  echo "       -p        The port to use "
 	exit 1
 }
 
@@ -23,8 +24,9 @@ WIDTH=480
 HEIGHT=360
 QUALITY=75
 BROWSER="firefox --new-tab"
+PORT=$DR_WEBVIEWER_PORT
 
-while getopts ":w:h:q:t:b:" opt; do
+while getopts ":w:h:q:t:b:p:" opt; do
 case $opt in
 w) WIDTH="$OPTARG"
 ;;
@@ -36,11 +38,15 @@ t) TOPIC="$OPTARG"
 ;;
 b) BROWSER="$OPTARG"
 ;;
+p) PORT="$OPTARG"
+;;
 \?) echo "Invalid option -$OPTARG" >&2
 usage
 ;;
 esac
 done
+
+DR_WEBVIEWER_PORT=$PORT
 
 export DR_VIEWER_HTML=$DR_DIR/tmp/streams-$DR_RUN_ID.html
 export DR_NGINX_CONF=$DR_DIR/tmp/streams-$DR_RUN_ID.conf
@@ -119,5 +125,5 @@ IP_ADDRESSES="$( hostname -I)";
 echo "The Viewer is avaliable on the following hosts:"
 for ip in $IP_ADDRESSES;
 do
-    echo "http://${ip}:${DR_WEBVIEWER_PORT}"
+    echo "http://${ip}:${PORT}"
 done

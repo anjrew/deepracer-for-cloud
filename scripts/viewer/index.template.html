@@ -206,7 +206,8 @@
             let cameraCards = document.querySelectorAll('.card')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
             let roboSelection = document.getElementById('robo-select').value
-            roboSelection = urlSearchParams.get('robo') || roboSelection
+            urlRoboSelection = urlSearchParams.get('robo')
+            roboSelection = urlRoboSelection || roboSelection
             let cameraSelectionEl = document.getElementById('camera-select')
             let cameraSelection = cameraSelectionEl.value
             cameraSelection = urlSearchParams.get('camera') || cameraSelection
