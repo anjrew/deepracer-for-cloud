@@ -3,6 +3,16 @@ from deepracer.logs import metrics
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 import time
+import pandas as pd
+from deepracer.logs import \
+    SimulationLogsIO as slio, \
+    NewRewardUtils as nr, \
+    AnalysisUtils as au, \
+    PlottingUtils as pu, \
+    ActionBreakdownUtils as abu, \
+    DeepRacerLog
+from deepracer.logs import (AnalysisUtils, DeepRacerLog, S3FileHandler)
+
 
 
 parser = ArgumentParser()
@@ -22,6 +32,10 @@ parser.add_argument("-p", "--prefix", dest="prefix",
 parser.add_argument("-m", "--method", dest="method",
                     help="Statistical value to be calculated. Examples are 'mean', 'median','min' & 'max'. Default: 'mean'.",  type=str ,default="mean")
 
+# SET MINIO ARG
+# parser.add_argument("-m", "--method", dest="method",
+#                     help="Statistical value to be calculated. Examples are 'mean', 'median','min' & 'max'. Default: 'mean'.",  type=str ,default="mean")
+
 
 args = vars(parser.parse_args())
 
@@ -37,12 +51,21 @@ linewidth = 2.0
 plt.ion()
 plt.show(block=False)
 
+fh = S3FileHandler(bucket=BUCKET, prefix=PREFIX,
+                   profile="minio", s3_endpoint_url="http://localhost:9000")
+log = DeepRacerLog(filehandler=fh)
+
+
 def show_stats(): 
     plt.clf()
     plt.cla()
     plt.close()
 
-        
+    
+    log.load(force=True)
+
+    df = log.dataframe()
+    
     tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
 
     train=tm.getTraining()
@@ -117,6 +140,13 @@ def show_stats():
     ax5.set_xlabel('Interation')
     ax5.set_ylabel('Completion')
 
+    simulation_agg = au.simulation_agg(df, secondgroup="unique_episode")
+    complete_laps = simulation_agg[simulation_agg['progress']==100]
+
+    ax6.title.set_text('Reward vs Time for completed laps')
+    ax6.scatter(complete_laps['time'], complete_laps['reward'], linewidth=linewidth)
+    ax6.set_xlabel('Time')
+    ax6.set_ylabel('Reward')
 
     fig.canvas.draw()
     fig.canvas.flush_events()

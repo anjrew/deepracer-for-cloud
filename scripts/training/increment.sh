@@ -8,6 +8,7 @@ usage(){
     echo "-d delim  Delimiter in model-name (e.g. '-' in 'test-model-1')"
     echo "-f        Force. Ask for no confirmations."
     echo "-w        Wipe the S3 prefix to ensure that two models are not mixed."
+    echo "-n        Set this flag so not to increment with pretrained and instead just make a new model"
 	exit 1
 }
 
@@ -19,8 +20,9 @@ function ctrl_c() {
 }
 
 OPT_DELIM='-'
+IS_PRETRAINED=True
 
-while getopts ":fwp:d:" opt; do
+while getopts ":fwp:d:n:" opt; do
 case $opt in
 
 f) OPT_FORCE="True"
@@ -30,6 +32,8 @@ p) OPT_PREFIX="$OPTARG"
 w) OPT_WIPE="--delete"
 ;;
 d) OPT_DELIM="$OPTARG"
+;;
+n) IS_PRETRAINED=False
 ;;
 h) usage
 ;;
@@ -66,7 +70,7 @@ then
             exit 1
         fi
     fi
-    sed -i.bak -re "s/(DR_LOCAL_S3_PRETRAINED_PREFIX=).*$/\1$CURRENT_RUN_MODEL/g; s/(DR_LOCAL_S3_PRETRAINED=).*$/\1True/g; ; s/(DR_LOCAL_S3_MODEL_PREFIX=).*$/\1$NEW_RUN_MODEL/g" "$CONFIG_FILE" && echo "Done."
+    sed -i.bak -re "s/(DR_LOCAL_S3_PRETRAINED_PREFIX=).*$/\1$CURRENT_RUN_MODEL/g; s/(DR_LOCAL_S3_PRETRAINED=).*$/\1$IS_PRETRAINED/g; ; s/(DR_LOCAL_S3_MODEL_PREFIX=).*$/\1$NEW_RUN_MODEL/g" "$CONFIG_FILE" && echo "Done."
 else
     echo    "Error in determining new model. Aborting."
     exit 1
