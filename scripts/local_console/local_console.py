@@ -12,6 +12,9 @@ from deepracer.logs import \
     ActionBreakdownUtils as abu, \
     DeepRacerLog
 from deepracer.logs import (AnalysisUtils, DeepRacerLog, S3FileHandler)
+import os
+from deepracer.tracks import TrackIO, Track
+
 
 
 
@@ -53,6 +56,8 @@ plt.show(block=False)
 
 fh = S3FileHandler(bucket=BUCKET, prefix=PREFIX,
                    profile="minio", s3_endpoint_url="http://localhost:9000")
+tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
+
 log = DeepRacerLog(filehandler=fh)
 
 
@@ -66,8 +71,6 @@ def show_stats():
 
     df = log.dataframe()
     
-    tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
-
     train=tm.getTraining()
 
     summary_df=tm.getSummary(method=ag_method, summary_index=['r-i','master_iteration'])
@@ -147,10 +150,10 @@ def show_stats():
     ax6.scatter(complete_laps['time'], complete_laps['reward'], linewidth=linewidth)
     ax6.set_xlabel('Time')
     ax6.set_ylabel('Reward')
-
+    
     fig.canvas.draw()
     fig.canvas.flush_events()
-    
+        
 def view_stat_stream():
   while True:
     show_stats()

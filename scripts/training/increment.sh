@@ -22,7 +22,7 @@ function ctrl_c() {
 OPT_DELIM='-'
 IS_PRETRAINED=True
 
-while getopts ":fwp:d:n:" opt; do
+while getopts ":fwpn:d:" opt; do
 case $opt in
 
 f) OPT_FORCE="True"
@@ -42,6 +42,8 @@ usage
 ;;
 esac
 done
+
+echo "Iterating model and using pretrained: $IS_PRETRAINED"
 
 CONFIG_FILE=$DR_CONFIG
 echo "Configuration file $CONFIG_FILE will be updated."
@@ -94,3 +96,4 @@ then
     fi
     aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 rm s3://${DR_LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} --recursive
 fi
+

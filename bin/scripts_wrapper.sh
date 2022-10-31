@@ -51,6 +51,8 @@ function dr-start-training {
 }
 
 function dr-increment-training {
+  echo "Here"
+  echo "$@"
   dr-update-env && ${DR_DIR}/scripts/training/increment.sh "$@" && dr-update-env
 }
 
@@ -316,6 +318,10 @@ function dr-stop-viewer {
 function dr-update-viewer {
   $DR_DIR/scripts/viewer/stop.sh "$@"
   $DR_DIR/scripts/viewer/start.sh "$@"
+}
+
+function dr-backup-loganalysis {
+  $DR_DIR/scripts/log-analysis/backup.sh "$@"
 }
 
 export DR_TIMING_FILE=$DR_DIR/tmp/training-timing

@@ -12,6 +12,8 @@ RUN_TIME=$(printf '%dd:%dh:%dm:%ds\n' $((SECONDS_DIFF/86400)) $((SECONDS_DIFF%86
 RESULT="Training $DR_RUN_ID stopped on $(date -u). Run time: $RUN_TIME"
 echo $RESULT >> $DR_TIMING_FILE
 echo $RESULT
+echo $DR_TIMING_FILE
+
 
 if [[ -n $SAGEMAKER_CONTAINERS ]];
 then
