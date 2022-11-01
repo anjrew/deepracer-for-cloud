@@ -59,7 +59,7 @@ function dr-increment-training {
 function dr-stop-training {
   NEW_RUN_ID=$(($DR_RUN_ID + 1))
   ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/training && ./stop.sh" && \
-    sed -i~ "/^DR_RUN_ID=/s/=.*/=$NEW_RUN_ID/" $DR_DIR/run.env
+    sed -i.bak "/^DR_RUN_ID=/s/=.*/=$NEW_RUN_ID/" $DR_DIR/run.env
 }
 
 function dr-start-evaluation {
@@ -308,6 +308,7 @@ function dr-view-stream {
 }
 
 function dr-start-viewer {
+  dr-update
   $DR_DIR/scripts/viewer/start.sh "$@"
 }
 

@@ -120,7 +120,7 @@ if [[ -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
   $BROWSER "http://127.0.01:8100" &
 fi
 
-CURRENT_CONTAINER_HASH=$(docker ps | grep loganalysis | head -c 12)
+CURRENT_CONTAINER_HASH=$(docker ps | grep dr_viewer | head -c 12)
 
 IP_ADDRESSES="$( hostname -I)";
 echo "The viewer will avaliable on the following hosts after initialization:"
