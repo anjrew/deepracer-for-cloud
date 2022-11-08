@@ -46,6 +46,18 @@ discrete_action_space = [
     }
 ]
 
+discrete_action_with_action_copies = [
+    *discrete_action_space,
+    {
+        "steering_angle": 15,
+        "speed": 0.6
+    },
+    {
+        "steering_angle": 30,
+        "speed": 0.6
+    }
+]
+
 continuous_action_space = {
     "speed": {
         "high": 2,
@@ -62,10 +74,24 @@ assert "discrete" != vd.get_action_space_label(continuous_action_space)
 assert "discrete" == vd.get_action_space_label(discrete_action_space)
 assert "continuous" != vd.get_action_space_label(discrete_action_space)
 assert "random" != vd.get_action_space_label(discrete_action_space)
-assert vd.check_valid_action_space_property("continuous", continuous_action_space)
+assert vd.check_valid_action_space_property(
+    "continuous", continuous_action_space)
 assert vd.check_valid_action_space_property("discrete", discrete_action_space)
-assert not vd.check_valid_action_space_property("discrete", continuous_action_space)
-assert not vd.check_valid_action_space_property("continuous", discrete_action_space)
-assert not vd.check_valid_action_space_property("invalid", continuous_action_space)
-assert not vd.check_valid_action_space_property("invalid", discrete_action_space)
+assert not vd.check_valid_action_space_property(
+    "discrete", continuous_action_space)
+assert not vd.check_valid_action_space_property(
+    "continuous", discrete_action_space)
+assert not vd.check_valid_action_space_property(
+    "invalid", continuous_action_space)
+assert not vd.check_valid_action_space_property(
+    "invalid", discrete_action_space)
 
+assert vd.no_multiple_same_action(discrete_action_space)
+
+threw = False
+try:
+    assert vd.no_multiple_same_action(discrete_action_with_action_copies)
+except:
+    threw = True
+    
+assert threw == True

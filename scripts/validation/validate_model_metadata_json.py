@@ -17,8 +17,6 @@ f = open(args['file'])
 # # a dictionary
 data = json.load(f)
 
-print('Here')
-
 assert func.check_sensor_property(
     data['sensor']), f"Invalid 'sensor' value(s) detected: {str(data['sensor'])}"
 
@@ -31,4 +29,8 @@ assert data['training_algorithm'] == "sac" or data[
 assert func.check_valid_action_space_property(
     data['action_space_type'], data['action_space']), 'Invalid action space/type detected'
 
+assert func.no_multiple_same_action(data['action_space'])
+
+
+print('\033[32m' + 'All action space tests passed' + '\033[m')
 sys.exit(2)

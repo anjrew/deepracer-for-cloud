@@ -1,19 +1,11 @@
-from cProfile import label
 from deepracer.logs import metrics
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 import time
-import pandas as pd
 from deepracer.logs import \
-    SimulationLogsIO as slio, \
-    NewRewardUtils as nr, \
     AnalysisUtils as au, \
-    PlottingUtils as pu, \
-    ActionBreakdownUtils as abu, \
     DeepRacerLog
-from deepracer.logs import (AnalysisUtils, DeepRacerLog, S3FileHandler)
-import os
-from deepracer.tracks import TrackIO, Track
+from deepracer.logs import ( DeepRacerLog, S3FileHandler)
 
 
 

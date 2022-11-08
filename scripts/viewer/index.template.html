@@ -165,7 +165,6 @@
         let { robo, camera, quality } = extractPropertiesFromUrl(location.href)
         console.log('{ robo, camera, quality }', robo, camera, quality)
 
-        setupForm(robo, camera, quality)
 
         camQuality = document.getElementById('camera-quality')
         camQuality.addEventListener('change', () => updatePage());
@@ -192,6 +191,8 @@
             cameraSelect.appendChild(option)
         })
         cameraSelect.addEventListener('change', () => updatePage());
+
+        setupForm(robo, camera, quality)
 
 
         buildElements(width, height)
@@ -317,6 +318,7 @@
         }
 
         function setupForm(robo, camera, quality) {
+            console.log('setting up :',)
             if (robo) {
                 document.getElementById('robo-select').value = robo
             }
@@ -354,6 +356,14 @@
                 }, 5000)
             }, 300)
         }
+        
+
+        console.log(`At the endo of start up`,
+        'camQuality',document.getElementById('camera-quality'),
+        'roboSelect',document.getElementById('robo-select'),
+        'cameraSelect', document.getElementById('camera-select')
+
+        )
     </script>
 </body>
 

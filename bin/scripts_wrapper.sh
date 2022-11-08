@@ -14,6 +14,12 @@ function dr-upload-custom-files {
   aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DR_DIR/custom_files/ $CUSTOM_TARGET
 }
 
+function dr-test-action-space {
+  VALIDATOR_SCRIPT="${DR_DIR}/scripts/validation/validate_model_metadata_json.py"
+  METADATA_FILE_PATH="$DR_DIR/custom_files/model_metadata.json"
+  python3 "${VALIDATOR_SCRIPT}" -f "${METADATA_FILE_PATH}"
+}
+
 function dr-upload-model {
   dr-update-env && ${DR_DIR}/scripts/upload/upload-model.sh "$@"
 }
@@ -324,5 +330,12 @@ function dr-update-viewer {
 function dr-backup-loganalysis {
   $DR_DIR/scripts/log-analysis/backup.sh "$@"
 }
+
+function dr-quick-setup {
+  dr-start-loganalysis
+  dr-view-local-console 
+  dr-start-viewer
+}
+
 
 export DR_TIMING_FILE=$DR_DIR/tmp/training-timing
