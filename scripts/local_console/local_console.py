@@ -6,6 +6,7 @@ from deepracer.logs import \
     AnalysisUtils as au, \
     DeepRacerLog
 from deepracer.logs import ( DeepRacerLog, S3FileHandler)
+import logging
 
 
 
@@ -37,7 +38,7 @@ args = vars(parser.parse_args())
 
 BUCKET=args['bucket']
 PREFIX=args['prefix']
-
+print('Showing logs for ', PREFIX)
 ag_method = args['method']
 refresh_time = args['refresh_time']
 rolling_average = args['rolling_average']
