@@ -105,6 +105,11 @@
             border: medium solid var(--primary-color);
             border-radius: 10px;
         }
+
+        .dismiss-button {
+            padding: 0.5rem 1rem;
+            margin: 1rem;
+        }
     </style>
 </head>
 
@@ -141,7 +146,14 @@
             $ROBOMAKER_CONTAINERS_HTML
         ];
 
+
+        maximumCameraAmount = 6
+
         var cameras = [
+            {
+                id: "kvs_stream",
+                topic: "/racecar/deepracer/kvs_stream",
+            },
             {
                 id: "camera",
                 topic: "/racecar/camera/zed/rgb/image_rect_color",
@@ -154,63 +166,61 @@
                 id: "sub_camera",
                 topic: "/sub_camera/zed/rgb/image_rect_color",
             },
-            {
-                id: "kvs_stream",
-                topic: "/racecar/deepracer/kvs_stream",
-            },
         ]
 
-        let height = "$HEIGHT"
-        let width = "$WIDTH"
+        let height = "360"
+        let width = "480"
         let { robo, camera, quality } = extractPropertiesFromUrl(location.href)
-        console.log('{ robo, camera, quality }', robo, camera, quality)
-
 
         camQuality = document.getElementById('camera-quality')
+
         camQuality.addEventListener('change', () => updatePage());
 
         // Add Robomaker select options
         roboSelect = document.getElementById('robo-select')
-        addAllOption(roboSelect)
-        robomakerContainers.forEach(robomaker => {
-            var option = document.createElement('option')
-            option.value = robomaker
-            option.innerHTML = robomaker
-            roboSelect.appendChild(option)
-        })
-        roboSelect.addEventListener('change', () => updatePage());
 
+        addAllOption(roboSelect)
+
+        robomakerContainers.forEach(robomaker => {
+            var roboOption = document.createElement('option')
+            roboOption.value = robomaker
+            roboOption.innerHTML = robomaker
+            roboSelect.appendChild(roboOption)
+        })
+
+        roboSelect.addEventListener('change', () => updatePage());
 
         // Add Camera select options
         cameraSelect = document.getElementById('camera-select')
+
         addAllOption(cameraSelect)
+
         cameras.forEach(camera => {
-            var option = document.createElement('option')
-            option.value = camera.id
-            option.innerHTML = camera.id
-            cameraSelect.appendChild(option)
+            var cameraOption = document.createElement('option')
+            cameraOption.value = camera.id
+            cameraOption.innerHTML = camera.id
+            cameraSelect.appendChild(cameraOption)
         })
+
         cameraSelect.addEventListener('change', () => updatePage());
 
         setupForm(robo, camera, quality)
 
-
         buildElements(width, height)
+
 
 
         function buildElements(width, height) {
 
             const urlSearchParams = new URLSearchParams(window.location.search)
 
-            console.log(`Building elements`)
             let mainContainer = document.getElementById('main-container')
             let cameraCards = document.querySelectorAll('.card')
             let cameraLabelEl = document.querySelector('[for="camera-select"]')
             let roboSelectionValue = document.getElementById('robo-select').value
             urlRoboSelection = urlSearchParams.get('robo')
-            console.log('The robo selection is',urlRoboSelection)
             roboSelectionValue = urlRoboSelection || roboSelectionValue
-            console.log('The robo after assignment is',urlRoboSelection)
+
             let cameraSelectionEl = document.getElementById('camera-select')
             let cameraSelectionValue = cameraSelectionEl.value
             cameraSelectionValue = urlSearchParams.get('camera') || cameraSelectionValue
@@ -221,61 +231,91 @@
             mainContainer.innerHTML = ''
 
             if (roboSelectionValue === 'all') {
+                cameraAllSelectEl.classList.add('hide')
+
                 if (cameraSelectionValue === 'all') {
-                    cameraAllSelectEl.classList.add('hide')
-                    cameraAllSelectEl.value = cameraSelectTopEl.value
+                    cameraSelectionEl.value = cameraSelectTopEl.value
+                    updatePage()
                 }
             } else {
                 cameraAllSelectEl.classList.remove('hide')
             }
 
+            cummaltiveCameraAmount = 0
+
             let robomakerSections = robomakerContainers
                 .filter((robo) => roboSelectionValue === 'all' || roboSelectionValue === robo)
-                .map(robo => {
-                    let roboMaker = document.createElement('div')
-                    roboMaker.classList.add('robo-maker')
-                    roboMaker.dataset.robo = robo
-                    let roboMakerTitle = document.createElement('h2')
-                    roboMakerTitle.innerHTML = 'Robomaker: ' + robo
-                    roboMaker.appendChild(roboMakerTitle)
-                    let roboCameras = document.createElement('div')
-                    roboCameras.dataset.robo = robo
-                    roboCameras.classList.add('robo-camera-group')
+                .every((robo) => {
 
-                    let camerasToShow = cameras
-                        .filter((cam) => cameraSelectionValue === 'all' || cameraSelectionValue === cam.id)
+                    if (cummaltiveCameraAmount != maximumCameraAmount) {
+                        let roboMaker = document.createElement('div')
+                        roboMaker.classList.add('robo-maker')
+                        roboMaker.dataset.robo = robo
+                        let roboMakerTitle = document.createElement('h2')
+                        roboMakerTitle.innerHTML = 'Robomaker: ' + robo
+                        roboMaker.appendChild(roboMakerTitle)
+                        let roboCameras = document.createElement('div')
+                        roboCameras.dataset.robo = robo
+                        roboCameras.classList.add('robo-camera-group')
 
-                    camerasToShow.forEach(camera => {
-                        // Create div
-                        var div = document.createElement('div')
-                        div.dataset.camera = camera.id
-                        div.dataset.robo = robo
-                        div.classList.add('card')
-                        let cameraTitle = document.createElement('h3')
-                        cameraTitle.innerHTML = camera.id
 
-                        // Create image
-                        var image = document.createElement('img')
-                        image.dataset.camera = camera.id
+                        console.log('cummaltiveCameraAmount', cummaltiveCameraAmount)
+                        let camerasToShow = cameras
+                            .filter((cam) => cameraSelectionValue === 'all' || cameraSelectionValue === cam.id)
 
-                        url = createStreamUrl(robo, camera.topic, qualityVal, width, height)
-                        image.classList.add('card-img')
-                        image.setAttribute('src', url)
-                        image.setAttribute('alt', robo + '-' + camera.id)
+                        camerasToShow.every((camera) => {
 
-                        div.appendChild(cameraTitle)
-                        div.appendChild(image)
-                        roboCameras.append(div)
-                    })
-                    roboMaker.appendChild(roboCameras)
-                    return roboMaker
+                            if (cummaltiveCameraAmount <= maximumCameraAmount) {
+                                // Create div
+                                var div = document.createElement('div')
+                                div.dataset.camera = camera.id
+                                div.dataset.robo = robo
+                                div.classList.add('card')
+                                let cameraTitle = document.createElement('h3')
+                                cameraTitle.innerHTML = camera.id
+
+                                // Create image
+                                var image = document.createElement('img')
+                                image.dataset.camera = camera.id
+
+                                url = createStreamUrl(robo, camera.topic, qualityVal, width, height)
+                                image.classList.add('card-img')
+                                image.setAttribute('src', url)
+                                image.setAttribute('alt', robo + '-' + camera.id)
+
+                                div.appendChild(cameraTitle)
+                                div.appendChild(image)
+                                roboCameras.append(div)
+                                cummaltiveCameraAmount += 1
+                            }
+                            roboMaker.appendChild(roboCameras)
+                            mainContainer.appendChild(roboMaker)
+                            return cummaltiveCameraAmount != maximumCameraAmount
+                        })
+
+
+                    } else {
+                        if (cummaltiveCameraAmount == maximumCameraAmount) {
+                            console.log(cummaltiveCameraAmount)
+                            console.log('Adding warning dispaly')
+                            var div = document.createElement('div')
+                            div.innerText = "Maximum amount of " + maximumCameraAmount + " cameras reached"
+                            div.classList.add('max-cameras-reached-alert')
+                            var dismissButton = document.createElement('button')
+                            dismissButton.classList.add('dismiss-button')
+                            dismissButton.innerText = "Dismiss"
+                            dismissButton.addEventListener('click', () => document.querySelector('.max-cameras-reached-alert').remove())
+                            div.appendChild(dismissButton)
+                            mainContainer.append(div)
+                        }
+                        cummaltiveCameraAmount += 1
+                    }
+
+                    return cummaltiveCameraAmount != maximumCameraAmount + 1
+
                 })
 
-            // Add all created elements to the DOM
-            mainContainer = document.getElementById('main-container')
-            robomakerSections.forEach((el) => mainContainer.appendChild(el))
         }
-
 
         // Adds an 'all' option to the select options element argument
         function addAllOption(el) {
@@ -343,27 +383,15 @@
             setTimeout(() => {
                 let { robo, camera, quality } = getFormValue()
                 var url = createUrl(robo, camera, quality, width, height)
-                console.log('url.searchParams', url.search)
-                console.log('url', url)
-                console.log('url.href', url.href)
-
 
                 location.href = url.href
-                console.log(`Reloading page`, location.href)
                 setTimeout(() => {
 
                     location.reload(true)
                 }, 5000)
             }, 300)
         }
-        
 
-        console.log(`At the endo of start up`,
-        'camQuality',document.getElementById('camera-quality'),
-        'roboSelect',document.getElementById('robo-select'),
-        'cameraSelect', document.getElementById('camera-select')
-
-        )
     </script>
 </body>
 

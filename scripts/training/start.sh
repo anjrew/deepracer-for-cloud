@@ -192,3 +192,8 @@ elif [[ "${OPT_DISPLAY,,}" == "sagemaker" ]]; then
   dr-logs-sagemaker -w 20
 fi
 
+read -r -p "Would you like to start a viewe instance? [y/N] " response
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
+then
+    dr-start-viewer
+fi
