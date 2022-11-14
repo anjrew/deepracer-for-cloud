@@ -79,10 +79,12 @@ def show_stats():
       fig.tight_layout(pad=5.0)
       
       master_iteration_values = summary_df.index.get_level_values('master_iteration')
-      
+      print('here1')
       if rolling_average is None:
         amount_of_data_points = 5
         rolling_average = int(round(len(master_iteration_values) / amount_of_data_points, 0))
+        
+      print('here2')
 
       print(f'Showing with rolling avarage {rolling_average} based on  master_iteration_values {len(master_iteration_values)} and {amount_of_data_points}')
       
@@ -91,10 +93,12 @@ def show_stats():
       average_completion = summary_df[['train_completion','eval_completion']].mean(axis='columns')
       train_reward = summary_df['train_reward']
       eval_reward = summary_df['eval_reward']
+      print('here3')
 
       summary_df['train_reward_completion'] = (train_completion / 100) * train_reward
       summary_df['eval_reward_completion'] = (eval_completion / 100) * eval_reward
-
+      
+      print('here4')
 
       ax.title.set_text('Completion per iteration')  # type: ignore
       

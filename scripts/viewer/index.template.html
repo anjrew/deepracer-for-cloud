@@ -258,8 +258,6 @@
                         roboCameras.dataset.robo = robo
                         roboCameras.classList.add('robo-camera-group')
 
-
-                        console.log('cummaltiveCameraAmount', cummaltiveCameraAmount)
                         let camerasToShow = cameras
                             .filter((cam) => cameraSelectionValue === 'all' || cameraSelectionValue === cam.id)
 
@@ -296,8 +294,6 @@
 
                     } else {
                         if (cummaltiveCameraAmount == maximumCameraAmount) {
-                            console.log(cummaltiveCameraAmount)
-                            console.log('Adding warning dispaly')
                             var div = document.createElement('div')
                             div.innerText = "Maximum amount of " + maximumCameraAmount + " cameras reached"
                             div.classList.add('max-cameras-reached-alert')
@@ -358,7 +354,6 @@
         }
 
         function setupForm(robo, camera, quality) {
-            console.log('setting up :',)
             if (robo) {
                 document.getElementById('robo-select').value = robo
             }
@@ -382,13 +377,19 @@
         function updatePage() {
             setTimeout(() => {
                 let { robo, camera, quality } = getFormValue()
-                var url = createUrl(robo, camera, quality, width, height)
 
-                location.href = url.href
-                setTimeout(() => {
+                if(Number(quality) <= 100) {
 
-                    location.reload(true)
-                }, 5000)
+                    var url = createUrl(robo, camera, quality, width, height)
+                    
+                    location.href = url.href
+                    setTimeout(() => {
+                        
+                        location.reload(true)
+                    }, 5000)
+                } else {
+                    document.getElementById('camera-quality').value = 100
+                }
             }, 300)
         }
 
