@@ -51,13 +51,13 @@ function dr-download-custom-files {
 }
 
 function dr-start-training {
+  rm -r $DR_DIR/tmp/
   dr-update-env
   dr-upload-custom-files
   $DR_DIR/scripts/training/start.sh "$@"
 }
 
 function dr-increment-training {
-  echo "Here"
   echo "$@"
   dr-update-env && ${DR_DIR}/scripts/training/increment.sh "$@" && dr-update-env
 }

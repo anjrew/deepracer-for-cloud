@@ -89,7 +89,9 @@ session = boto3.session.Session(profile_name=s3_profile)
 s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_endpoint_url)
 
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
-local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+tmp_path = os.path.join(os.environ.get('DR_DIR'),'tmp')
+os.makedirs(tmp_path, exist_ok=True) 
+local_yaml_path = os.path.abspath(os.path.join(tmp_path, 'training-params-' + str(round(time.time())) + '.yaml'))
 
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
@@ -196,7 +198,8 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
 
             #upload additional training params files
             yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name_temp))
-            local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+            local_yaml_path = os.path.abspath(os.path.join(tmp_path, 'training-params-' + str(round(time.time())) + '.yaml'))
+            os.makedirs(local_yaml_path, exist_ok=True) 
             with open(local_yaml_path, 'w') as yaml_file:
                 yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
             s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)

@@ -43,6 +43,14 @@ usage
 esac
 done
 
+read -r -p "Do you want to retain the last model? [y/N] " response
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
+then
+    IS_PRETRAINED=True
+else
+    IS_PRETRAINED=False
+fi
+
 echo "Iterating model and using pretrained: $IS_PRETRAINED"
 
 CONFIG_FILE=$DR_CONFIG

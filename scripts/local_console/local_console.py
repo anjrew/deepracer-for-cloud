@@ -53,6 +53,7 @@ tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endp
 
 log = DeepRacerLog(filehandler=fh)
 
+amount_of_data_points = 5
 
 def show_stats(): 
   
@@ -79,27 +80,21 @@ def show_stats():
       fig.tight_layout(pad=5.0)
       
       master_iteration_values = summary_df.index.get_level_values('master_iteration')
-      print('here1')
+      
       if rolling_average is None:
-        amount_of_data_points = 5
         rolling_average = int(round(len(master_iteration_values) / amount_of_data_points, 0))
         
-      print('here2')
-
       print(f'Showing with rolling avarage {rolling_average} based on  master_iteration_values {len(master_iteration_values)} and {amount_of_data_points}')
-      
+
       train_completion = summary_df['train_completion']
       eval_completion = summary_df['eval_completion']
       average_completion = summary_df[['train_completion','eval_completion']].mean(axis='columns')
       train_reward = summary_df['train_reward']
       eval_reward = summary_df['eval_reward']
-      print('here3')
 
       summary_df['train_reward_completion'] = (train_completion / 100) * train_reward
       summary_df['eval_reward_completion'] = (eval_completion / 100) * eval_reward
       
-      print('here4')
-
       ax.title.set_text('Completion per iteration')  # type: ignore
       
       training_method_completion_label = f'Training {ag_method} completion'
@@ -110,7 +105,7 @@ def show_stats():
         eval_method_completion_label:"orange",
         av_method_label: "purple"
       }
-      
+
       ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth, label=training_method_completion_label, color=by_label[training_method_completion_label])
       ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth, label=eval_method_completion_label, color=by_label[eval_method_completion_label])
       ax.plot(master_iteration_values, average_completion.rolling(rolling_average).mean(), linewidth, label=av_method_label, color=by_label[av_method_label])
@@ -158,7 +153,7 @@ def show_stats():
       ax6.set_xlabel('Time')
       ax6.set_ylabel('Reward')
       
-      
+    
       time_complete_rolling_av = complete_laps['time'].rolling(rolling_average).mean()
       ax7.title.set_text('Completed lap times per unique episode')  # type: ignore
       ax7.plot(time_complete_rolling_av, linewidth=linewidth)

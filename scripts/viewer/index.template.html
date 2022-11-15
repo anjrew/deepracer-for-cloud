@@ -116,7 +116,7 @@
 <body>
     <div class="container">
         <div class="navbar">
-            <div class="navbar-header">DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX $TOPIC</div>
+            <div class="navbar-header">Run ID:$DR_RUN_ID - Model: $DR_LOCAL_S3_MODEL_PREFIX </div>
             <div class="select-options">
                 <div class="select">
                     <label for="robo-select">Robomaker:</label>
@@ -378,13 +378,13 @@
             setTimeout(() => {
                 let { robo, camera, quality } = getFormValue()
 
-                if(Number(quality) <= 100) {
+                if (Number(quality) <= 100) {
 
                     var url = createUrl(robo, camera, quality, width, height)
-                    
+
                     location.href = url.href
                     setTimeout(() => {
-                        
+
                         location.reload(true)
                     }, 5000)
                 } else {
