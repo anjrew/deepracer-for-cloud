@@ -20,8 +20,7 @@ function ctrl_c() {
         exit 1
 }
 
-echo "Training $DR_RUN_ID stated on $(date -u)" > $DR_TIMING_FILE
-echo $(date -u +%s) >> $DR_TIMING_FILE
+
 
 OPT_DISPLAY="SAGEMAKER"
 
@@ -59,6 +58,11 @@ if [ ! -d /tmp/sagemaker ]; then
   sudo mkdir -p /tmp/sagemaker
   sudo chmod -R g+w /tmp/sagemaker
 fi
+
+# Add training timing file
+echo "Training $DR_RUN_ID stated on $(date -u)" > $DR_TIMING_FILE
+echo $(date -u +%s) >> $DR_TIMING_FILE
+
 
 #Check if files are available
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"

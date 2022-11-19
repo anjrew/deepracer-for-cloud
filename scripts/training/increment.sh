@@ -43,7 +43,7 @@ usage
 esac
 done
 
-read -r -p "Do you want to retain the last model? [y/N] " response
+read -r -p "Do you want to retrain the last model? [y/N] " response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
 then
     IS_PRETRAINED=True
@@ -67,13 +67,14 @@ else
     NEW_RUN_MODEL_NUM=$(echo "${CURRENT_RUN_MODEL_NUM} + 1" | bc )
     NEW_RUN_MODEL=$(echo $CURRENT_RUN_MODEL | sed "s/${CURRENT_RUN_MODEL_NUM}\$/${NEW_RUN_MODEL_NUM}/")
 fi
-
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 if [[ -n "${NEW_RUN_MODEL}" ]];
 then
     echo "Incrementing model from ${CURRENT_RUN_MODEL} to ${NEW_RUN_MODEL}"
     if [[ -z "${OPT_FORCE}" ]]; 
     then
-        read -r -p "Are you sure? [y/N] " response
+        read -r -p "Are you sure? [y/N]" response
         if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
         then
             echo "Aborting."
@@ -95,7 +96,7 @@ then
     fi
     if [[ -z "${OPT_FORCE}" ]]; 
     then
-        read -r -p "Are you sure? [y/N] " response
+        read -r -p '$(echo "Are you sure? [y/N])"' response
         if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
         then
             echo "Aborting."

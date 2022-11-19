@@ -15,6 +15,7 @@ nohup.out
 tracks/
 *.tar
 *.bak
+*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

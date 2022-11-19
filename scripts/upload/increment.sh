@@ -53,13 +53,15 @@ else
     NEW_UPLOAD_MODEL_NUM=$(echo "${CURRENT_UPLOAD_MODEL_NUM} + 1" | bc )
     NEW_UPLOAD_MODEL=$(echo $CURRENT_UPLOAD_MODEL | sed "s/${CURRENT_UPLOAD_MODEL_NUM}\$/${NEW_UPLOAD_MODEL_NUM}/")
 fi
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
 if [[ -n "${NEW_UPLOAD_MODEL}" ]];
 then
     echo "Incrementing model from ${CURRENT_UPLOAD_MODEL} to ${NEW_UPLOAD_MODEL}"
     if [[ -z "${OPT_FORCE}" ]]; 
     then
-        read -r -p "Are you sure? [y/N] " response
+        read -r -p "Are you sure? [y/N]" response
         if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
         then
             echo "Aborting."
@@ -74,6 +76,10 @@ fi
 
 export DR_UPLOAD_S3_PREFIX=$(eval echo "${NEW_UPLOAD_MODEL}")
 
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+
 if [[ -n "${OPT_WIPE}" ]];
 then
     MODEL_DIR_S3=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL} )
@@ -83,7 +89,7 @@ then
     fi
     if [[ -z "${OPT_FORCE}" ]]; 
     then
-        read -r -p "Are you sure? [y/N] " response
+        read -r -p "Are you sure? [y/N]" response
         if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
         then
             echo "Aborting."

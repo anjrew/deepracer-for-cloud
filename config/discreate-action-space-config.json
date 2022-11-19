@@ -15,7 +15,7 @@
     "sensor": [
         "FRONT_FACING_CAMERA"
     ],
-    "neural_network": "DEEP_CONVOLUTIONAL_NETWORK_SHALLOW",
+    "neural_network": "DEEP_CONVOLUTIONAL_NETWORK",
     "training_algorithm": "clipped_ppo",
     "action_space_type": "continuous",
     "version": "4"

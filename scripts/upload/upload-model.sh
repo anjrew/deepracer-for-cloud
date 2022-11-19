@@ -166,11 +166,13 @@ fi
 # Create Training Params Yaml.
 PARAMS_FILE=$(python3 $DR_DIR/scripts/upload/prepare-config.py)
 
+
+
 # Upload files
 if [[ -z "${OPT_FORCE}" ]];
 then
     echo "Ready to upload model ${SOURCE_S3_MODEL_PREFIX} to s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/"
-    read -r -p "Are you sure? [y/N] " response
+    read -r -p "Are you sure? [y/N]" response
     if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
     then
         echo "Aborting."
