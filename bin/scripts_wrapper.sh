@@ -52,6 +52,7 @@ function dr-download-custom-files {
 
 function dr-start-training {
   rm -r $DR_DIR/tmp/
+  mkdir $DR_DIR/tmp/
   dr-update-env
   dr-upload-custom-files
   $DR_DIR/scripts/training/start.sh "$@"

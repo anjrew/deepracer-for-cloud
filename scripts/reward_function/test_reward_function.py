@@ -74,13 +74,14 @@ from reward_function import reward_function
 tests = args['tests']
 
 
-def create_random_params() -> dict:
+def create_random_params(disable_offtrack=True) -> dict:
     
     track_width = random.uniform(5, 10)
     distance_from_center = random.uniform(0, track_width/2)
     
     
     return {
+        'disable_offtrack': disable_offtrack,
         # flag to indicate if the agent is on the track
         "all_wheels_on_track": True,
         # agent's x-coordinate in meters

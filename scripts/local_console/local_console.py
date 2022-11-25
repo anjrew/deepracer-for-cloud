@@ -38,7 +38,6 @@ args = vars(parser.parse_args())
 
 BUCKET=args['bucket']
 PREFIX=args['prefix']
-print('Showing logs for ', PREFIX)
 ag_method = args['method']
 refresh_time_s = args['refresh_time']
 rolling_average = args['rolling_average']
@@ -47,11 +46,6 @@ linewidth = 2.0
 plt.ion()
 plt.show(block=False)
 
-fh = S3FileHandler(bucket=BUCKET, prefix=PREFIX,
-                   profile="minio", s3_endpoint_url="http://localhost:9000")
-tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
-
-log = DeepRacerLog(filehandler=fh)
 
 amount_of_data_points = 5
 
@@ -64,6 +58,17 @@ def show_stats():
     plt.close()
 
     try:
+      
+      
+      print('Showing logs for ', PREFIX)
+      
+      fh = S3FileHandler(bucket=BUCKET, prefix=PREFIX,
+                   profile="minio", s3_endpoint_url="http://localhost:9000")
+      tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
+
+
+      log = DeepRacerLog(filehandler=fh)
+      
       log.load(force=True)
 
       df = log.dataframe()
