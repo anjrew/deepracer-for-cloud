@@ -3,7 +3,7 @@ from xmlrpc.client import Boolean
 
 
 def check_sensor_property(test: List) -> Boolean:
-    """Checks the sesor property of a model metadata file
+    """Checks the sensor property of a model metadata file
 
     Args:
         test (List(str)): The list of sensor values to check
