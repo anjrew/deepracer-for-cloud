@@ -92,6 +92,7 @@ fi
 
 # set evaluation specific environment variables
 STACK_NAME="deepracer-$DR_RUN_ID"
+echo "Stack name is STACK_NAME: " $STACK_NAME
 
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
@@ -105,11 +106,13 @@ if [ "$DR_WORKERS" -gt 1 ]; then
     mkdir -p $DR_DIR/tmp/comms.$DR_RUN_ID
     rm -rf $DR_DIR/tmp/comms.$DR_RUN_ID/*
     COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-robomaker-multi.yml"
+    echo "Using COMPOSE_FILES: " + $COMPOSE_FILES
   fi
 
   if [ "$DR_TRAIN_MULTI_CONFIG" == "True" ]; then
     export MULTI_CONFIG=$WORKER_CONFIG
-    echo "Multi-config training, creating multiple Robomaker configurations in $S3_PATH"  
+    echo "Multi-config training, creating multiple Robomaker configurations in $S3_PATH" 
+    echo "Using COMPOSE_FILES: " + $COMPOSE_FILES
   else
     echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE" 
   fi
@@ -163,9 +166,11 @@ then
     exit 0
   fi
 
+  echo "Using Docker Swarm and deloying stack name '$STACK_NAME'"
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 
 else
+  echo "Using Docker Compose and deloying stack name '$STACK_NAME'"
   DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
 fi
 
@@ -193,10 +198,11 @@ if [[ "${OPT_DISPLAY,,}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "tru
 elif [[ "${OPT_DISPLAY,,}" == "robomaker" ]]; then
   dr-logs-robomaker -w 15 -n $OPT_ROBOMAKER
 elif [[ "${OPT_DISPLAY,,}" == "sagemaker" ]]; then
+  echo "Showing sagemaker logs"
   dr-logs-sagemaker -w 20
 fi
 
-read -r -p "Would you like to start a viewe instance? [y/N] " response
+read -r -p "Would you like to start a viewer instance? [y/N] " response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
 then
     dr-start-viewer

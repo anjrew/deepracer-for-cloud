@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-docker run --rm -d -p "8888:8888" \
+docker run --rm -d -p "$DR_ANALYSIS_PORT:8888" \
 -v `pwd`/../../data/logs:/workspace/logs \
 -v `pwd`/../../docker/volumes/.aws:/root/.aws \
 -v `pwd`/../../data/analysis:/workspace/analysis \

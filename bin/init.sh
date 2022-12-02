@@ -99,6 +99,8 @@ then
     # copy default environment files
     cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
     cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
+else
+    echo "Skipping setting default files"    
 fi
 
 
@@ -227,3 +229,7 @@ then
     bash -c "source $INSTALL_DIR/bin/autorun.sh"
 fi
 
+# Build executer image
+docker build \
+-t deep-racer-executer:latest 
+-f ${$INSTALL_DIR}/docker/build/python-script-executer/Dockerfile.python-script-executer ${$INSTALL_DIR}/docker/build/python-script-executer/

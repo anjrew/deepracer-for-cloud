@@ -15,8 +15,17 @@ function dr-upload-custom-files {
 }
 
 function dr-test-action-space {
-  VALIDATOR_SCRIPT="${DR_DIR}/scripts/validation/validate_model_metadata_json.py"
   METADATA_FILE_PATH="$DR_DIR/custom_files/model_metadata.json"
+  docker run \
+    --rm \
+    -v ${DR_DIR}/scripts/validation:/app/ \
+    -v ${METADATA_FILE_PATH}:/data/model_metadata.json \
+    --name executer \
+    deep-racer-executer:latest \
+    python /app/validate_model_metadata_json.py -f /data/model_metadata.json
+
+
+
   python3 "${VALIDATOR_SCRIPT}" -f "${METADATA_FILE_PATH}"
 }
 

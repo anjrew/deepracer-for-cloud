@@ -81,7 +81,7 @@ def show_stats():
       episodes_text = "Episodes: %i" % len(train)
       iteration_text = "Latest iteration: %s / master %i" % (max(train['r-i']),max(train['master_iteration']))
 
-      fig.suptitle(f'{episodes_text} / {iteration_text}', fontsize=16)
+      fig.suptitle('{0} / {1}'.format(episodes_text, iteration_text), fontsize=16)
       fig.tight_layout(pad=5.0)
       
       master_iteration_values = summary_df.index.get_level_values('master_iteration')
@@ -89,7 +89,7 @@ def show_stats():
       if rolling_average is None:
         rolling_average = int(round(len(master_iteration_values) / amount_of_data_points, 0))
         
-      print(f'Showing with rolling avarage {rolling_average} based on  master_iteration_values {len(master_iteration_values)} and {amount_of_data_points}')
+      print('Showing with rolling average {0} based on  master_iteration_values {1} and {2}'.format(rolling_average,len(master_iteration_values), amount_of_data_points ))
 
       train_completion = summary_df['train_completion']
       eval_completion = summary_df['eval_completion']
@@ -102,9 +102,9 @@ def show_stats():
       
       ax.title.set_text('Completion per iteration')  # type: ignore
       
-      training_method_completion_label = f'Training {ag_method} completion'
-      eval_method_completion_label = f'Eval {ag_method} completion'
-      av_method_label = f'Average {ag_method} completion'
+      training_method_completion_label = 'Training {0} completion'.format(ag_method)
+      eval_method_completion_label = 'Eval {0} completion'.format(ag_method)
+      av_method_label = 'Average {0} completion'.format(ag_method)
       by_label = {
         training_method_completion_label: "blue",
         eval_method_completion_label:"orange",
@@ -114,7 +114,7 @@ def show_stats():
       ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth, label=training_method_completion_label, color=by_label[training_method_completion_label])
       ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth, label=eval_method_completion_label, color=by_label[eval_method_completion_label])
       ax.plot(master_iteration_values, average_completion.rolling(rolling_average).mean(), linewidth, label=av_method_label, color=by_label[av_method_label])
-      ax.set_xlabel('Interation')
+      ax.set_xlabel('Iteration')
       ax.set_ylabel('% Completion')
       
       ax.legend(by_label)
@@ -131,7 +131,7 @@ def show_stats():
       ax3.plot(master_iteration_values, summary_df['eval_reward_completion'].rolling(rolling_average).mean(), linewidth=linewidth)
       ax3.plot(master_iteration_values, summary_df[['train_reward_completion','eval_reward_completion']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
       ax3.legend(['Train Reward/Completion', 'Eval Reward/Completion', 'Average Reward/Completion'])
-      ax3.set_xlabel('Interation')
+      ax3.set_xlabel('Iteration')
       ax3.set_ylabel('Reward/Completion')
 
       ax4.title.set_text('Reward per iteration')  # type: ignore
@@ -139,7 +139,7 @@ def show_stats():
       ax4.plot(master_iteration_values, summary_df['eval_reward'].rolling(rolling_average).mean(), linewidth=linewidth)
       ax4.plot(master_iteration_values, summary_df[['train_reward','eval_reward']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
       ax4.legend(['Train Reward/Completion', 'Eval Reward/Completion', 'Average Reward/Completion'])
-      ax4.set_xlabel('Interation')
+      ax4.set_xlabel('Iteration')
       ax4.set_ylabel('Reward')
       
       ax5.title.set_text('Completion per iteration')  # type: ignore
@@ -147,7 +147,7 @@ def show_stats():
       ax5.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth=linewidth)
       ax5.plot(master_iteration_values, summary_df[['train_completion','eval_completion']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
       ax5.legend(['Train Iteration/Completion', 'Eval Iteration/Completion', 'Average Iteration/Completion'])
-      ax5.set_xlabel('Interation')
+      ax5.set_xlabel('Iteration')
       ax5.set_ylabel('Completion')
 
       simulation_agg = au.simulation_agg(df, secondgroup="unique_episode")
@@ -168,8 +168,9 @@ def show_stats():
       fig.canvas.draw()
       fig.canvas.flush_events()
       
-    except:
-      print(f'Logs not found. Tring again after {refresh_time_s} seconds')
+    except Exception as e:
+      print('Logs not found. Trying again after {0} seconds'.format(refresh_time_s))
+      print('The exception was: ', e)
         
 def view_stat_stream():
   while True:

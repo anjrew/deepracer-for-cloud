@@ -1,5 +1,6 @@
 from tensorflow.python.client import device_lib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
