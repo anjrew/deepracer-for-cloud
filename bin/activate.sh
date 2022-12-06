@@ -212,5 +212,14 @@ function dr-view-local-console {
 
 function dr-test-reward-function {
   SCRIPT="$DIR/scripts/reward_function/test_reward_function.py --f /home/aj/aws-deep-racer/deepracer-for-cloud/custom_files/reward_function.py $@"
-  python3 $SCRIPT || python2 $SCRIPT || python $SCRIPT 
+  # python3 $SCRIPT || python2 $SCRIPT || python $SCRIPT 
+
+  METADATA_FILE_PATH="$DR_DIR/custom_files/model_metadata.json"
+  docker run \
+    --rm \
+    -v $DIR/scripts/reward_function/test_reward_function.py:/app/test_reward_function.py \
+    -v $DIR/custom_files/reward_function.py:/data/reward_function.py\
+    --name reward-function-tester \
+    deep-racer-executer:latest \
+    python /app/validate_model_metadata_json.py -f /data/model_metadata.json
 } 

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 
+DIR=os.path.dirname(os.path.abspath(__file__))
 
 parser = ArgumentParser(
     description='''
@@ -20,7 +21,7 @@ parser = ArgumentParser(
 )
 
 parser.add_argument("-f", "--file", dest="file",
-                    help="The path to the reward file for testing", type=str, metavar="file_path", default='/home/aj/aws-deep-racer/deepracer-for-cloud/custom_files')
+                    help="The path to the reward file for testing", type=str, metavar="file_path", default=f'{DIR}/custom_files')
 
 parser.add_argument("-t", "--tests", dest="tests",
                     help="The number of tests to carry out", type=int, default=3)
@@ -56,7 +57,6 @@ progress = args['progress']
 key_values = args.get('key_values')
 show = args.get('show')
 track_width = args.get('track_width')
-print(args)
 
 if key_values is not None:
     key_values = list(map(lambda x: x.split('=', maxsplit=1) ,key_values.split('&', maxsplit=1)))

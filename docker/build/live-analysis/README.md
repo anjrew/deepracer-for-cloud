@@ -12,8 +12,9 @@ Example of running the executer
 """bash
     docker run \
     --rm \
-    -v ${PWD}/scripts/local_console/local_console.py:/app/script.py \
-    --name executer \
+    -v ${PWD}/:/app/files \
+    --name live-analysis \
+    --network=sagemaker-local \
     deep-racer-live-analysis:latest
 """
 
