@@ -64,8 +64,6 @@
             margin: 8px;
             box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 1px -1px, rgba(0, 0, 0, 0.14) 0px 1px 1px 0px, rgba(0, 0, 0, 0.12) 0px 1px 3px 0px;
             transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 600px;
-            min-height: 480px;
             border-radius: 4px;
             display: block;
             position: relative;
@@ -133,6 +131,10 @@
                     <label for="camera-quality">Quality:</label>
                     <input name="camera-quality" id="camera-quality" , type="number" value="$QUALITY" />
                 </div>
+                <div class="select">
+                    <label for="width-size">Width:</label>
+                    <input name="width-size" id="width-size" , type="number" />
+                </div>
             </div>
         </div>
         <div id="main-container">
@@ -168,9 +170,12 @@
             },
         ]
 
-        let height = "360"
-        let width = "480"
-        let { robo, camera, quality } = extractPropertiesFromUrl(location.href)
+        
+        let { robo, camera, quality, width } = extractPropertiesFromUrl(location.href)
+
+        widthSize = document.getElementById('width-size')
+
+        widthSize.addEventListener('change', () => updatePage());
 
         camQuality = document.getElementById('camera-quality')
 
@@ -204,13 +209,11 @@
 
         cameraSelect.addEventListener('change', () => updatePage());
 
-        setupForm(robo, camera, quality)
+        setupForm(robo, camera, quality, width)
 
-        buildElements(width, height)
+        buildElements()
 
-
-
-        function buildElements(width, height) {
+        function buildElements() {
 
             const urlSearchParams = new URLSearchParams(window.location.search)
 
@@ -228,6 +231,10 @@
             let cameraSelectTopEl = cameraSelectionEl.querySelectorAll('option')[1]
             let qualityVal = document.getElementById('camera-quality').value
 
+            urlWidthSelection = urlSearchParams.get('width')
+            let widthSelectionValue = document.getElementById('width-size').value
+            widthSelectionValue = urlWidthSelection || widthSelectionValue
+
             mainContainer.innerHTML = ''
 
             if (roboSelectionValue === 'all') {
@@ -241,13 +248,13 @@
                 cameraAllSelectEl.classList.remove('hide')
             }
 
-            cummaltiveCameraAmount = 0
+            cumulativeCameraAmount = 0
 
             let robomakerSections = robomakerContainers
                 .filter((robo) => roboSelectionValue === 'all' || roboSelectionValue === robo)
                 .every((robo) => {
 
-                    if (cummaltiveCameraAmount != maximumCameraAmount) {
+                    if (cumulativeCameraAmount != maximumCameraAmount) {
                         let roboMaker = document.createElement('div')
                         roboMaker.classList.add('robo-maker')
                         roboMaker.dataset.robo = robo
@@ -263,7 +270,7 @@
 
                         camerasToShow.every((camera) => {
 
-                            if (cummaltiveCameraAmount <= maximumCameraAmount) {
+                            if (cumulativeCameraAmount <= maximumCameraAmount) {
                                 // Create div
                                 var div = document.createElement('div')
                                 div.dataset.camera = camera.id
@@ -276,24 +283,24 @@
                                 var image = document.createElement('img')
                                 image.dataset.camera = camera.id
 
-                                url = createStreamUrl(robo, camera.topic, qualityVal, width, height)
+                                url = createStreamUrl(robo, camera.topic, qualityVal)
                                 image.classList.add('card-img')
                                 image.setAttribute('src', url)
+                                image.style.width = widthSelectionValue + 'px'
                                 image.setAttribute('alt', robo + '-' + camera.id)
 
                                 div.appendChild(cameraTitle)
                                 div.appendChild(image)
                                 roboCameras.append(div)
-                                cummaltiveCameraAmount += 1
+                                cumulativeCameraAmount += 1
                             }
                             roboMaker.appendChild(roboCameras)
                             mainContainer.appendChild(roboMaker)
-                            return cummaltiveCameraAmount != maximumCameraAmount
+                            return cumulativeCameraAmount != maximumCameraAmount
                         })
 
-
                     } else {
-                        if (cummaltiveCameraAmount == maximumCameraAmount) {
+                        if (cumulativeCameraAmount == maximumCameraAmount) {
                             var div = document.createElement('div')
                             div.innerText = "Maximum amount of " + maximumCameraAmount + " cameras reached"
                             div.classList.add('max-cameras-reached-alert')
@@ -304,13 +311,11 @@
                             div.appendChild(dismissButton)
                             mainContainer.append(div)
                         }
-                        cummaltiveCameraAmount += 1
+                        cumulativeCameraAmount += 1
                     }
 
-                    return cummaltiveCameraAmount != maximumCameraAmount + 1
-
+                    return cumulativeCameraAmount != maximumCameraAmount + 1
                 })
-
         }
 
         // Adds an 'all' option to the select options element argument
@@ -322,18 +327,17 @@
             el.appendChild(option)
         }
 
-        function createStreamUrl(robo, topic, quality, width, height) {
-            return "/" + robo + "/stream?topic=" + topic + "&quality=" + quality + "&width=" + width + "&height=" + height
+        function createStreamUrl(robo, topic, quality) {
+            return "/" + robo + "/stream?topic=" + topic + "&quality=" + quality + "&width=" + '480' + "&height=" + '360'
         }
 
-        function createUrl(robo, camera, quality, width, height) {
+        function createUrl(robo, camera, quality, width) {
             var url = new URL(origin);
             var search_params = url.searchParams;
             search_params.set('robo', robo);
             search_params.set('camera', camera);
             search_params.set('quality', quality);
             search_params.set('width', width);
-            search_params.set('height', height);
 
             // change the search property of the main url
             url.search = search_params.toString();
@@ -349,11 +353,10 @@
                 camera: search_params.get('camera'),
                 quality: search_params.get('quality'),
                 width: search_params.get('width'),
-                height: search_params.get('height')
             }
         }
 
-        function setupForm(robo, camera, quality) {
+        function setupForm(robo, camera, quality, width=480) {
             if (robo) {
                 document.getElementById('robo-select').value = robo
             }
@@ -363,28 +366,28 @@
             if (quality) {
                 document.getElementById('camera-quality').value = quality
             }
-
+            document.getElementById('width-size').value = width || 480
         }
 
         function getFormValue() {
             return {
                 robo: document.getElementById('robo-select').value,
                 camera: document.getElementById('camera-select').value,
-                quality: document.getElementById('camera-quality').value
+                quality: document.getElementById('camera-quality').value,
+                width: document.getElementById('width-size').value
             }
         }
 
         function updatePage() {
             setTimeout(() => {
-                let { robo, camera, quality } = getFormValue()
+                let { robo, camera, quality, width } = getFormValue()
 
                 if (Number(quality) <= 100) {
 
-                    var url = createUrl(robo, camera, quality, width, height)
+                    var url = createUrl(robo, camera, quality, width)
 
                     location.href = url.href
                     setTimeout(() => {
-
                         location.reload(true)
                     }, 5000)
                 } else {
