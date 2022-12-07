@@ -71,8 +71,10 @@ function dr-increment-training {
 function dr-stop-training {
   dr-stop-viewer
   NEW_RUN_ID=$(($DR_RUN_ID + 1))
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/training && ./stop.sh" && \
+   
+  bash -c "cd $DR_DIR/scripts/training && ./stop.sh" && \
     sed -i.bak "/^DR_RUN_ID=/s/=.*/=$NEW_RUN_ID/" $DR_DIR/run.env
+    
   dr-upload-model
 }
 

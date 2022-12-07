@@ -28,11 +28,6 @@ parser.add_argument("-p", "--prefix", dest="prefix",
 parser.add_argument("-m", "--method", dest="method",
                     help="Statistical value to be calculated. Examples are 'mean', 'median','min' & 'max'. Default: 'mean'.",  type=str ,default="mean")
 
-# SET MINIO ARG
-# parser.add_argument("-m", "--method", dest="method",
-#                     help="Statistical value to be calculated. Examples are 'mean', 'median','min' & 'max'. Default: 'mean'.",  type=str ,default="mean")
-
-
 args = vars(parser.parse_args())
 
 
