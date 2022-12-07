@@ -4,6 +4,8 @@ import numpy as np
 import os
 import argparse
 import boto3
+from s3_functions import list_bucket_s3
+# import metrics_page as mp
 
 from deepracer.logs import metrics
 from navigation import NavOptions
@@ -19,61 +21,62 @@ from navigation import NavOptions
 # args = vars(parser.parse_args())
 
 BUCKET_NAME=os.getenv('DR_LOCAL_S3_BUCKET', 'bucket')
-model_prefix=os.getenv('DR_LOCAL_S3_MODEL_PREFIX')
 
 # S3_ENDPOINT=os.getenv('DR_MINIO_URL', 'http://minio:9000') 
 S3_ENDPOINT='http://localhost:9000'
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 
-session = boto3.session.Session(profile_name='minio')  # type: ignore
-s3_client = session.resource("s3", endpoint_url=S3_ENDPOINT)
-bucket = s3_client.Bucket(BUCKET_NAME)  # type: ignore
+# session = boto3.session.Session(profile_name='minio')  # type: ignore
+# s3_client = session.resource("s3", endpoint_url=S3_ENDPOINT)
+# bucket = s3_client.Bucket(BUCKET_NAME)  # type: ignore
 
 
-model_folders = {}
-all_objects = bucket.objects.all()
-for object in all_objects:
-    print(object.key)
-    path_parts = object.key.split('/')
-    if len(path_parts) > 1:
-        model_name = path_parts[0]
-        if model_name != 'custom_files':
-            print('Got model_name', model_name)
-            model_folders[model_name] = model_folders
-
+model_folders = list_bucket_s3(BUCKET_NAME, S3_ENDPOINT)
 
 
 # ===== UI ======
 
-nav =  st.sidebar.radio(
+navigation =  st.sidebar.radio(
     "Choose view",
     [e.value for e in NavOptions]
 )
 
-
-
 st.title('DeepRacer Analysis')
 
-
 model_prefix = st.selectbox(
-    'Model name',
-    model_folders.keys())
-
+    'Choose Model',
+    model_folders)
 
 st.button('Refresh 🔄')
 
-
-try:
-    # tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url=ENDPOINT)
-    tm = metrics.TrainingMetrics(BUCKET_NAME, model_name=model_prefix, profile='minio', s3_endpoint_url=S3_ENDPOINT)  # type: ignore
-
-    summary_df = tm.getSummary(method='mean', summary_index=['r-i','master_iteration'])
-
-    fig = tm.plotProgress()
+st.markdown("***")
 
 
-    st.pyplot(fig)
+if model_prefix is not None:
     
-except Exception as e:
-    st.error(f'Failed to load model {model_prefix}')
+    if navigation == NavOptions.METRICS.value:
+        try:
+            tm = metrics.TrainingMetrics(BUCKET_NAME, model_name=model_prefix, profile='minio', s3_endpoint_url=S3_ENDPOINT)  # type: ignore
+
+            mplt_col1, mplt_col2 = st.columns(2)
+            
+            method = mplt_col1.selectbox(
+                'Choose Method',
+                ['mean','median','min','max'])
+            
+            rolling_average = mplt_col2.number_input(label='Moving average (Iterations)',value=2)
+            
+            fig = tm.plotProgress(method=method, rolling_average=rolling_average)  # type: ignore
+
+            st.pyplot(fig)
+            
+            summary_df = tm.getSummary(method=method, summary_index=['r-i','master_iteration'])  # type: ignore
+            
+            st.dataframe(summary_df.head(10))
+            
+        except Exception as e:
+            st.error(f'Failed to load model {model_prefix}')
+
+        
+

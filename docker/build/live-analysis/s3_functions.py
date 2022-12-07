@@ -1,10 +1,26 @@
-def list_bucket_s3(bucket):
-    logger.log(15, 'Listing s3 bucket: '+str(bucket))
+import boto3
+import streamlit as st
 
-    s3bucket = boto3.resource('s3')
-    my_bucket = s3bucket.Bucket(bucket)
-    files = []
-    for object in my_bucket.objects.all():
-        files.append(object.key)
-        logger.log(15, str(object.key))
-    return files
+@st.cache
+def list_bucket_s3(BUCKET_NAME: str, S3_ENDPOINT: str) -> 'list[str]':
+    """Returns a list of model names
+
+    Args:
+        BUCKET_NAME (str): The name of the bucket
+        S3_ENDPOINT (str): The endpoint of the bucket
+    """
+    session = boto3.session.Session(profile_name='minio')  # type: ignore
+    s3_client = session.resource("s3", endpoint_url=S3_ENDPOINT)
+    bucket = s3_client.Bucket(BUCKET_NAME)  # type: ignore
+
+    model_folders = { }
+    
+    all_objects = bucket.objects.all()
+    for object in all_objects:
+        path_parts = object.key.split('/')
+        if len(path_parts) > 1:
+            model_name = path_parts[0]
+            if model_name != 'custom_files':
+                model_folders[model_name] = None
+    
+    return list(model_folders.keys()) # type: ignore)
