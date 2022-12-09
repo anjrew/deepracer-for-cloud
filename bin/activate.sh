@@ -195,12 +195,12 @@ function dr-reset {
 }
 
 function dr-create-action-space {
-  SCRIPT="$DIR/scripts/generation/generate_discete_action_space.py -i $DIR/config/discreate-action-space-config.json -o $DIR/custom_files/model_metadata.json $@"
+  SCRIPT="$DIR/scripts/generation/generate_discete_action_space.py -i $DIR/config/discreate-action-space-config.json -o $DR_LOCAL_S3_MODEL_METADATA_KEY $@"
   python3 $SCRIPT || python $SCRIPT 
 }
 
 function dr-view-action-space {
-  SCRIPT="$DIR/scripts/action_space/view_action_space.py -f $DIR/custom_files/model_metadata.json $@"
+  SCRIPT="$DIR/scripts/action_space/view_action_space.py -f $DR_LOCAL_S3_MODEL_METADATA_KEY $@"
   python3 $SCRIPT || python $SCRIPT 
 }
 
@@ -212,7 +212,7 @@ function dr-view-local-console {
 
 function dr-test-reward-function {
 
-  METADATA_FILE_PATH="$DR_DIR/custom_files/model_metadata.json"
+  METADATA_FILE_PATH="$DR_LOCAL_S3_MODEL_METADATA_KEY"
   docker run \
     --rm \
     -v $DIR/scripts/reward_function/test_reward_function.py:/app/test_reward_function.py \
