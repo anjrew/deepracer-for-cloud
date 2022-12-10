@@ -1,9 +1,11 @@
 import streamlit as st
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
 import argparse
 import boto3
+from file_loaders import load_logs, load_meta_data
 from s3_functions import list_bucket_s3
 # import metrics_page as mp
 
@@ -27,14 +29,9 @@ S3_ENDPOINT='http://localhost:9000'
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 
-# session = boto3.session.Session(profile_name='minio')  # type: ignore
-# s3_client = session.resource("s3", endpoint_url=S3_ENDPOINT)
-# bucket = s3_client.Bucket(BUCKET_NAME)  # type: ignore
-
-
 model_folders = list_bucket_s3(BUCKET_NAME, S3_ENDPOINT)
-
-
+                 
+                 
 # ===== UI ======
 
 navigation =  st.sidebar.radio(
@@ -52,6 +49,7 @@ st.button('Refresh 🔄')
 
 st.markdown("***")
 
+st.header(navigation)
 
 if model_prefix is not None:
     
@@ -78,5 +76,46 @@ if model_prefix is not None:
         except Exception as e:
             st.error(f'Failed to load model {model_prefix}')
 
+    elif navigation == NavOptions.HYPER_PARAMETERS.value:
+        logs = load_meta_data(BUCKET_NAME, model_prefix, S3_ENDPOINT)
+        st.json(logs['hyperparameters'])
+
+
+    elif navigation == NavOptions.AGENT_AND_NETWORK.value:
+        logs = load_meta_data(BUCKET_NAME, model_prefix, S3_ENDPOINT)
+        st.json(logs['agent_and_network'])
+
         
+    elif navigation == NavOptions.ACTION_SPACE.value:
+        try:
+            logs = load_meta_data(BUCKET_NAME, model_prefix, S3_ENDPOINT)
+            action_space = logs['action_space']
+            st.json(action_space)
+            
+            if isinstance(action_space, list):
+                print('Creating action space graph')
+                x = []
+                y = []
+                for ang in action_space:
+                    x.append(ang['steering_angle'])
+                    y.append(ang['speed'])  
+                
+                fig, ax = plt.subplots()
+
+                ax.set_xlabel('Steering Angle')     # type: ignore
+                ax.set_ylabel('Speed')              # type: ignore
+                ax.scatter(x, y)
+                st.pyplot(fig)
+            else:
+                fig, ax = plt.subplots()
+                speed=action_space['speed']
+                steering_angle= action_space['steering_angle']
+
+                ax.set_xlabel('Steering Angle')     # type: ignore
+                ax.set_ylabel('Speed')              # type: ignore
+                
+                st.pyplot(fig)
+        except Exception as e:
+            print("Error: Failed to load action space", e)
+            st.error(f'Failed to load action space')
 

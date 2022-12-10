@@ -15,8 +15,7 @@ def list_bucket_s3(BUCKET_NAME: str, S3_ENDPOINT: str) -> 'list[str]':
 
     model_folders = { }
     
-    all_objects = bucket.objects.all()
-    for object in all_objects:
+    for object in bucket.objects.all():
         path_parts = object.key.split('/')
         if len(path_parts) > 1:
             model_name = path_parts[0]
@@ -24,3 +23,5 @@ def list_bucket_s3(BUCKET_NAME: str, S3_ENDPOINT: str) -> 'list[str]':
                 model_folders[model_name] = None
     
     return list(model_folders.keys()) # type: ignore)
+
+

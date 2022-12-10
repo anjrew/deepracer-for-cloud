@@ -1,0 +1,65 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HTML 5 Boilerplate</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+
+    <div style="display: flex; justify-content:center">
+
+
+        
+        <div id="action-space" style="display:flex; border: solid 1px black;">
+            
+            <div id="left-steering" style="display: flex; flex-grow: 1; border-right: solid 1px black;"></div>
+            <div id="right-steering" style="display: flex; flex-grow: 1;" ></div>
+        </div>
+        
+    </div>
+
+	<script>
+
+        actionSpaceSize = 500 // IN pixels
+        var actionSpace = document.getElementById('action-space');
+        actionSpace.style.height = actionSpaceSize + 'px'; 
+        actionSpace.style.width = actionSpaceSize + 'px'; 
+
+        document.onmousemove = (event) => {
+            var actionSpace = document.getElementById('action-space').getBoundingClientRect()
+            console.log('actionSpace', actionSpace)
+
+            
+            var leftSteering = document.getElementById('left-steering').getBoundingClientRect();
+            console.log('leftSteering', leftSteering)
+            var rightSteering = document.getElementById('right-steering').getBoundingClientRect();
+            console.log('rightSteering', rightSteering)
+
+            const {
+              clientX,
+              clientY
+            } = event
+            console.log('Mouse X', clientX, 'Mouse Y', clientY)
+
+
+            oneMpsSection = actionSpace.height / 4
+            degee
+
+            speedPosition =  (actionSpace.top + actionSpace.height) - clientY
+            steeringPosition = clientX - rightSteering.left
+            console.log('speedPosition', speedPosition,'steeringPosition', steeringPosition)
+
+            var r = 75; // Speed
+            var theta = 45;
+
+            // Convert polar to cartesian
+            var x = r * cos(theta);
+            var y = r * sin(theta);
+
+          }
+
+    </script>
+  </body>
+</html>
