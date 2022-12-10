@@ -1,13 +1,13 @@
 ## BUILD
 
-From withing the folder containing the Dockerfile
+From within the folder containing the Dockerfile
 """bash
     docker build -t deep-racer-live-analysis:latest -f ${PWD}/Dockerfile.live-analysis .
 """
 
 
 ## RUN
-Example of running the executer
+Example of running the live analysis
 
 """bash
     docker run \

@@ -1,6 +1,6 @@
 ## BUILD
 
-From withing the folder containing the Dockerfile
+From within the folder containing the Dockerfile
 """bash
     docker build -t deep-racer-executer:latest -f Dockerfile.python-script-executer .
 """
