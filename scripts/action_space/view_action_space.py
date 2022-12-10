@@ -1,6 +1,7 @@
 import json
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
+import numpy as np
 import math
 
 parser = ArgumentParser()
@@ -14,6 +15,14 @@ input_file = open(args['file'])
 
 meta_data = json.load(input_file)
 action_space = meta_data['action_space']
+
+
+def rotate(x,y,xo,yo,theta): #rotate x,y around xo,yo by theta (rad)
+    xr=math.cos(theta)*(x-xo)-math.sin(theta)*(y-yo)   + xo
+    yr=math.sin(theta)*(x-xo)+math.cos(theta)*(y-yo)  + yo
+    return [xr,yr]
+
+
 print('Amount of actions in the action space: {}'.format(len(action_space)))
 print('Creating action space graph')
 x_list = []
@@ -31,6 +40,7 @@ for ang in action_space:
 
     x = r * math.cos(theta)
     y = r * math.sin(theta)
+    x, y, = rotate(x,y,0,0,math.radians(90))
 
     x_list.append(x)
     y_list.append(y)
@@ -41,8 +51,10 @@ fig = plt.figure(figsize=(180,180))
 ax1 = plt.subplot(122, projection='polar')
 ax1.set_theta_zero_location("N") # type: ignore
 c = ax1.scatter(theta_list, r_list , cmap='hsv', alpha=0.75)
-ax1.set_thetamin(-35)  # type: ignore
-ax1.set_thetamax(35)  # type: ignore
+ax1.set_thetamin(-30)  # type: ignore
+ax1.set_thetamax(30)  # type: ignore
+ax1.set_xticks(np.pi/180. * np.linspace(35,  -40, 15, endpoint=False))
+
 
 # POLAR COORDINATE
 ax2 = plt.subplot(121)
