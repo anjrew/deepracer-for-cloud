@@ -98,6 +98,7 @@ export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
 WORKER_CONFIG=$(python3 $DR_DIR/scripts/training/prepare-config.py)
 
+echo "Using $DR_WORKERS workers"
 if [ "$DR_WORKERS" -gt 1 ]; then
   echo "Starting $DR_WORKERS workers"
 
@@ -166,7 +167,7 @@ then
     exit 0
   fi
 
-  echo "Using Docker Swarm and deloying stack name '$STACK_NAME'"
+  echo "Using Docker Swarm and deloying stack name '$STACK_NAME' with compose files '$COMPOSE_FILES'"
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 
 else
