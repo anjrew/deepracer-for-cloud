@@ -46,7 +46,6 @@ function dr-update-env {
 
 }
 
-conda activate DEEP_RACER | echo "Conda or environment DEEP_RACER not found. Please install conda and run 'conda init bash' and make sure environment has been initialised though the scrSipt"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DIR="$(dirname $SCRIPT_DIR)"
@@ -246,3 +245,6 @@ function dr-test-reward-function {
     deep-racer-executer:latest \
     python /app/validate_model_metadata_json.py -f /data/model_metadata.json
 } 
+
+
+conda activate DEEP_RACER || echo "Conda or environment DEEP_RACER not found. Please install conda and run 'conda init bash' and make sure environment has been initialised though the script"
