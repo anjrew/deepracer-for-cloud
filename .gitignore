@@ -6,6 +6,7 @@ recording/
 recording
 /*.env
 /*.bak
+/*.tar
 /*.json
 DONE
 data/
@@ -21,3 +22,5 @@ tracks/
 __pycache__/
 *.py[cod]
 *$py.class
+/*.sh
+_

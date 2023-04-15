@@ -80,6 +80,20 @@ else
   export DR_DOCKER_FILE_SEP="-f"
 fi
 
+# Check if CUDA_VISIBLE_DEVICES is configured.
+if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
+  echo "WARNING: You have CUDA_VISIBLE_DEVICES defined. The will no longer work as"
+  echo "         expected. To control GPU assignment use DR_ROBOMAKER_CUDA_DEVICES"
+  echo "         and DR_SAGEMAKER_CUDA_DEVICES and rlcoach v5.0.1 or later."
+fi
+
+# Check if CUDA_VISIBLE_DEVICES is configured.
+if [ "${DR_CLOUD,,}" == "local" ] && [ -z "${DR_MINIO_IMAGE}" ]; then
+  echo "WARNING: You have not configured DR_MINIO_IMAGE in system.env."
+  echo "         System will default to tag RELEASE.2022-10-24T18-35-07Z"
+  export DR_MINIO_IMAGE="RELEASE.2022-10-24T18-35-07Z"
+fi
+
 # Prepare the docker compose files depending on parameters
 if [[ "${DR_CLOUD,,}" == "azure" ]]; then
   export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
@@ -124,6 +138,12 @@ fi
 if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
   DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
   DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
+fi
+
+# Enable local simapp mount
+if [[ -d "${DR_ROBOMAKER_MOUNT_SIMAPP_DIR,,}" ]]; then
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
@@ -177,6 +197,9 @@ if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
   echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
 fi
+
+## Create a dr-local-aws command
+alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
 

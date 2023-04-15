@@ -20,6 +20,11 @@ usage(){
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
+if [[ "$INSTALL_DIR" == *\ * ]]; then
+    echo "Deepracer-for-Cloud cannot be installed in path with spaces. Exiting."
+    exit 1
+fi
+
 OPT_ARCH="gpu"
 OPT_CLOUD=""
 SKIP_FILES=0
@@ -78,7 +83,7 @@ cd $INSTALL_DIR
 
 # create directory structure for docker volumes
 mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
-mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/tmp
+mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/data/scripts $INSTALL_DIR/tmp
 sudo mkdir -p /tmp/sagemaker
 sudo chmod -R g+w /tmp/sagemaker
 
@@ -122,9 +127,18 @@ elif [[ "${OPT_CLOUD}" == "remote" ]]; then
     echo "Please define DR_REMOTE_MINIO_URL in system.env to point to remote minio instance."
 else
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
+    MINIO_PROFILE="minio"
+    sed -i "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
-    echo "Please run 'aws configure --profile minio' to set the credentials"
+
+    aws configure --profile $MINIO_PROFILE get aws_access_key_id > /dev/null 2> /dev/null
+
+    if [[ "$?" -ne 0 ]]; then
+        echo "Creating default minio credentials in AWS profile '$MINIO_PROFILE'"
+        aws configure --profile $MINIO_PROFILE set aws_access_key_id $(openssl rand -base64 12)
+        aws configure --profile $MINIO_PROFILE set aws_secret_access_key $(openssl rand -base64 12)
+        aws configure --profile $MINIO_PROFILE set region us-east-1
+    fi
 fi
 sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
 sed -i "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
@@ -177,15 +191,15 @@ docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
 SAGEMAKER_NW='sagemaker-local'
 docker swarm init --advertise-addr 127.0.0.1
 SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
-docker node update --label-add Sagemaker=true $SWARM_NODE
-docker node update --label-add Robomaker=true $SWARM_NODE
+docker node update --label-add Sagemaker=true $SWARM_NODE > /dev/null 2> /dev/null
+docker node update --label-add Robomaker=true $SWARM_NODE > /dev/null 2> /dev/null
 docker network ls | grep -q $SAGEMAKER_NW
 if [ $? -ne 0 ]
 then
     docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
 else
     docker network rm $SAGEMAKER_NW
-    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
+    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
 fi
 
 # ensure our variables are set on startup - not for local setup.

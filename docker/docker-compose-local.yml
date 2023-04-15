@@ -7,7 +7,7 @@ networks:
 
 services:
   minio:
-    image: ${DR_LOCAL_S3_IMAGE}
+    image: ${DR_LOCAL_S3_IMAGE}:${DR_MINIO_IMAGE}
     ports:
       - "9000:9000"
       - "9001:9001"
