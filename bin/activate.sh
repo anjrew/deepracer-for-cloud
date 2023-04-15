@@ -46,6 +46,8 @@ function dr-update-env {
 
 }
 
+conda activate DEEP_RACER | echo "Conda or environment DEEP_RACER not found. Please install conda and run 'conda init bash' and make sure environment has been initialised though the scrSipt"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DIR="$(dirname $SCRIPT_DIR)"
 export DR_DIR=$DIR

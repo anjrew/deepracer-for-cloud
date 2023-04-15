@@ -25,6 +25,8 @@ if [[ "$INSTALL_DIR" == *\ * ]]; then
     exit 1
 fi
 
+$INSTALL_DIR/bin/create_python_environment.sh
+
 OPT_ARCH="gpu"
 OPT_CLOUD=""
 SKIP_FILES=0
