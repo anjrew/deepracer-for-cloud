@@ -85,7 +85,7 @@ fi
 if [[ -z "${OPT_FORCE}" ]];
 then
     echo "Ready to download model ${SOURCE_S3_URL} to local ${TARGET_S3_PREFIX}"
-    read -r -p "Are you sure? [y/N] " response
+    read -r -p "Are you sure you want to download model? [y/N] " response
     if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
     then
         echo "Aborting."

@@ -1,2 +1,3 @@
 boto3
 pyyaml
+deepracer_utils==1.0.4

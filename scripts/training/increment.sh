@@ -79,7 +79,7 @@ then
     echo "Incrementing model from ${CURRENT_RUN_MODEL} to ${NEW_RUN_MODEL}"
     if [[ -z "${OPT_FORCE}" ]]; 
     then
-        read -r -p "Are you sure? [y/N]" response
+        read -r -p "Are you sure you want to increment? [y/N]" response
         if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
         then
             echo "Aborting."

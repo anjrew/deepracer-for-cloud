@@ -63,7 +63,7 @@ then
     else
         echo "Ready to upload car model to remote s3://${DR_UPLOAD_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}."
     fi
-    read -r -p "Are you sure? [y/N] " response
+    read -r -p "Are you sure you want to upload the model? [y/N] " response
     if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
     then
         echo "Aborting."
