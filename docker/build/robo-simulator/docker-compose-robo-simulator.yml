@@ -1,0 +1,31 @@
+version: "3.7"
+
+networks:
+  default:
+    external: true
+    name: sagemaker-local
+
+services:
+  robomaker:
+    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
+    # command: ["./run.sh run distributed_training.launch"]
+    command: ["python3 -c \"while True: print('yay')\""]
+    # tty: true 
+    ports:
+      - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
+      - "${DR_ROBOMAKER_GUI_PORT}:5900"
+    environment:
+      - WORLD_NAME=${DR_WORLD_NAME}
+      - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
+      - SAGEMAKER_SHARED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+      - APP_REGION=${DR_AWS_APP_REGION}
+      - S3_YAML_NAME=${DR_CURRENT_PARAMS_FILE}
+      - KINESIS_VIDEO_STREAM_NAME=${DR_KINESIS_STREAM_NAME}
+      - ENABLE_KINESIS=${DR_CAMERA_KVS_ENABLE}
+      - ENABLE_GUI=${DR_GUI_ENABLE}
+      - CUDA_VISIBLE_DEVICES=${DR_ROBOMAKER_CUDA_DEVICES}
+      - MULTI_CONFIG
+      - RTF_OVERRIDE=${DR_TRAIN_RTF}      
+      - ROS_MASTER_URI=http://localhost:11311/
+      - ROS_HOSTNAME=localhost
+    init: true
