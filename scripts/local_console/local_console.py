@@ -6,9 +6,6 @@ from deepracer.logs import \
     AnalysisUtils as au, \
     DeepRacerLog
 from deepracer.logs import ( DeepRacerLog, S3FileHandler)
-import logging
-
-
 
 
 parser = ArgumentParser()
