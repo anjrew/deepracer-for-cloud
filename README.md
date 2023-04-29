@@ -1,7 +1,7 @@
 # DeepRacer-For-Cloud
-Provides a quick and easy way to get up and running with a DeepRacer training environment using a cloud virtual machine or a local compter, such [AWS EC2 Accelerated Computing instances](https://aws.amazon.com/ec2/instance-types/?nc1=h_ls#Accelerated_Computing) or the Azure [N-Series Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu).
+Provides a quick and easy way to get up and running with a DeepRacer training environment using a cloud virtual machine or a local computer, such [AWS EC2 Accelerated Computing instances](https://aws.amazon.com/ec2/instance-types/?nc1=h_ls#Accelerated_Computing) or the Azure [N-Series Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu).
 
-DRfC runs on Ubuntu 20.04 or 22.04. GPU acceleration requires a NVIDIA GPU, preferrably with more than 8GB of VRAM.
+DRfC runs on Ubuntu 20.04 or 22.04. GPU acceleration requires a NVIDIA GPU, preferably with more than 8GB of VRAM.
 
 ## Introduction
 
@@ -11,7 +11,7 @@ DeepRacer-For-Cloud (DRfC) started as an extension of the work done by Alex (htt
 
 DRfC supports a wide set of features to ensure that you can focus on creating the best model:
 * User-friendly
-	* Based on the continously updated community [Robomaker](https://github.com/aws-deepracer-community/deepracer-simapp) and [Sagemaker](https://github.com/aws-deepracer-community/deepracer-sagemaker-container) containers, supporting a wide range of CPU and GPU setups.
+	* Based on the continuously updated community [Robomaker](https://github.com/aws-deepracer-community/deepracer-simapp) and [Sagemaker](https://github.com/aws-deepracer-community/deepracer-sagemaker-container) containers, supporting a wide range of CPU and GPU setups.
 	* Wide set of scripts (`dr-*`) enables effortless training.
 	* Detection of your AWS DeepRacer Console models; allows upload of a locally trained model to any of them.
 * Modes
