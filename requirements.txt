@@ -3,3 +3,5 @@ pyyaml
 deepracer_utils==1.0.4
 streamlit
 numpy
+pytest
+autopep8

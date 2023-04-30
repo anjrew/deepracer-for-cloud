@@ -1,6 +1,7 @@
 import logging
 import time
 from enum import Enum
+from typing import List, Union
 import pandas as pd
 import math
 
@@ -16,37 +17,98 @@ class MonitorOption(Enum):
     COMPLETION_RATE = 'completion_rate'
     TRAIN_REWARD= 'train_reward'
     EVALUATION_REWARD = 'evaluation_reward'
+    
+    def is_valid(self):
+        return self in MonitorOption
+
+class AggregationMethod(Enum):
+    MEAN = 'mean'
+    MODE = 'mode'
+    MEDIAN = 'median'
+    
+    def is_valid(self):
+        return self in AggregationMethod
+    
+class ImprovementCheck:
+    def __init__(self,
+        has_improved: bool,
+        best_result: Union[float, int]
+    ):
+        self.has_improved = has_improved
+        self.best_result = best_result     
+            
 
 class CurrentBestResults:
     def __init__(self):
-        self.fastest_lap_s = math.inf
-        self.best_consistency_deviation = math.inf
-        self.best_completion_rate = -math.inf
-        self.max_reward = -math.inf
+        self.lap_time_s = math.inf
+        self.consistency_deviation = math.inf
+        self.completion_rate = -math.inf
+        self.train_reward = -math.inf
+        self.eval_reward = -math.inf
+        self.patience = 0
 
     def update_fastest_lap(self, new_fastest_lap_s: float):
-        self.fastest_lap_s = new_fastest_lap_s
+        self.lap_time_s = new_fastest_lap_s
 
     def update_best_consistency_deviation(self, new_best_consistency_deviation: float):
-        self.best_consistency_deviation = new_best_consistency_deviation
-
+        self.patience = new_best_consistency_deviation
+        
     def update_best_completion_rate(self, new_best_completion_rate: float):
-        self.best_completion_rate = new_best_completion_rate
+        self.completion_rate = new_best_completion_rate
 
-    def update_max_reward(self, new_max_reward: float):
-        self.max_reward = new_max_reward
+    def update_best_train_reward(self, new_max_reward: float):
+        self.train_reward = new_max_reward
+
+    def update_best_eval_reward(self, new_max_reward: float):
+        self.train_reward = new_max_reward
+
+class EarlyStoppingArgs:
+    # Constants
+    # S3
+    BUCKET: str
+    PREFIX: str
+    
+    # Data args
+    AG_METHOD: AggregationMethod
+    REFRESH_TIME_S:int
+    ROLLING_AVERAGE: int
+    MAX_PATIENCE:int
+    MIN_DELTA = int
+    MONITOR_OPTIONS: List[MonitorOption]
+    
+    def __init__(self, 
+        bucket:str, 
+        prefix:str, 
+        ag_method: AggregationMethod,
+        refresh_time_s:int,
+        rolling_average: int,
+        max_patience:int,
+        min_delta:int,
+        monitor_options: List[MonitorOption]
+        ):
+        self.BUCKET = bucket
+        self.PREFIX = prefix
+        self.AG_METHOD = ag_method
+        self.REFRESH_TIME_S = refresh_time_s
+        self.ROLLING_AVERAGE = rolling_average
+        self.MAX_PATIENCE = max_patience
+        self.MIN_DELTA = min_delta
+        self.MONITOR_OPTIONS = monitor_options
+
 
 # Variables
 current_best_results=CurrentBestResults()
 
 
-def check_stats(monitor: MonitorOption, summary_df: pd.DataFrame, current_best: float): 
-    global patience, MIN_DELTA, current_fastest_lap_s
+def check_stats(
+        options: EarlyStoppingArgs,
+        current_best: CurrentBestResults,
+    ) -> CurrentBestResults: 
     try:
 
-        fh = S3FileHandler(bucket=BUCKET, prefix=PREFIX,
+        fh = S3FileHandler(bucket=options.BUCKET, prefix=options.PREFIX,
                    profile="minio", s3_endpoint_url="http://localhost:9000")
-        tm = metrics.TrainingMetrics(BUCKET, model_name=PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
+        tm = metrics.TrainingMetrics(options.BUCKET, model_name=options.PREFIX, profile='minio', s3_endpoint_url='http://localhost:9000')
 
         log = DeepRacerLog(filehandler=fh)
       
@@ -56,7 +118,7 @@ def check_stats(monitor: MonitorOption, summary_df: pd.DataFrame, current_best: 
       
         train=tm.getTraining()
 
-        summary_df=tm.getSummary(method=AG_METHOD, summary_index=['r-i','master_iteration'])
+        summary_df=tm.getSummary(method=str(options.AG_METHOD), summary_index=['r-i','master_iteration'])
         
         train_completion = summary_df['train_completion']
         eval_completion = summary_df['eval_completion']
@@ -69,57 +131,67 @@ def check_stats(monitor: MonitorOption, summary_df: pd.DataFrame, current_best: 
         
         simulation_agg = au.simulation_agg(df, secondgroup="unique_episode")
         complete_laps = simulation_agg[simulation_agg['progress']==100]
-        time_complete_rolling_av = complete_laps['time'].rolling(ROLLING_AVERAGE).mean()
+        time_complete_rolling_av = complete_laps['time'].rolling(options.ROLLING_AVERAGE).mean()
         
         
         model_improved=False
         improvements=[]
+        monitor_options=options.MONITOR_OPTIONS
         
         ## Check for improvement
-        if MonitorOption.FASTEST_LAP in MONITOR:
-            model_improved = check_fastest_lap_improved(complete_laps, current_fastest_lap_s)
+        if MonitorOption.FASTEST_LAP in monitor_options:
+            model_improved = check_fastest_lap_improved(complete_laps, current_best.lap_time_s)
             improvements.append(MonitorOption.FASTEST_LAP )
             
-        if MonitorOption.CONSISTENCY in MONITOR:
-            model_improved = check_consistency_improved(time_complete_rolling_av, MIN_DELTA)
+        if MonitorOption.CONSISTENCY in monitor_options:
+            model_improved = check_consistency_improved(time_complete_rolling_av, current_best.consistency_deviation)
             improvements.append(MonitorOption.CONSISTENCY)
 
-        if MonitorOption.COMPLETION_RATE in MONITOR:
-            model_improved = check_completion_rate_improved(average_completion, MIN_DELTA)
+        if MonitorOption.COMPLETION_RATE in monitor_options:
+            model_improved = check_completion_rate_improved(average_completion, current_best.completion_rate)
             improvements.append(MonitorOption.COMPLETION_RATE)
         
-        if MonitorOption.TRAIN_REWARD in MONITOR:
-            model_improved = check_reward_improved(summary_df, MIN_DELTA)
+        if MonitorOption.TRAIN_REWARD in monitor_options:
+            model_improved = check_reward_improved(train_reward, current_best.train_reward)
+            improvements.append(MonitorOption.TRAIN_REWARD)
+        
+        if MonitorOption.EVALUATION_REWARD in monitor_options:
+            model_improved = check_reward_improved(eval_reward, current_best.train_reward)
             improvements.append(MonitorOption.TRAIN_REWARD)
             
         if model_improved:
-            patience = MAX_PATIENCE
+            patience = options.MAX_PATIENCE
             logging.info(f'No improvement. Patience remaining: {patience}')
         else:    
-            if patience > 0:
-                patience -= 1
-                logging.info(f'No improvement. Patience remaining: {patience}')
+            if current_best.patience > 0:
+                current_best.patience -= 1
+                logging.info(f'No improvement. Patience remaining: {current_best.patience }')
             else:
                 logging.info('Patience expired. Stopping training')
                 ## Stop the training docker container by exiting the container with a non-zero exit code
                 exit(1)
+                
+        return current_best_results
 
     except Exception as e:
-      logging.error('Logs not found. Trying again after {0} seconds'.format(REFRESH_TIME_S))
+      logging.error('Logs not found. Trying again after {0} seconds'.format(options.REFRESH_TIME_S))
       logging.error('The exception was: ', e)
+      
+      return current_best_results
 
 
 
 
-def check_fastest_lap_improved(complete_laps: pd.DataFrame, current_fastest_s: float ) -> bool:
-        fastest_lap = get_fastest_lap(complete_laps)
-        if fastest_lap < current_fastest_s:
-            current_fastest_s = fastest_lap
-            logging.info('Fastest lap improved')
-            return True
-        else:
-            logging.info('Fastest lap did not improve')
-            return False
+def check_fastest_lap_improved(complete_laps: pd.DataFrame, current_fastest_s: float ) -> ImprovementCheck:
+    fastest_lap = get_fastest_lap(complete_laps)
+    has_improved = fastest_lap < current_fastest_s
+    metric="Fastest lap"
+    log_improvement(has_improved, metric)
+    return ImprovementCheck(has_improved, min(fastest_lap, current_fastest_s))
+
+def log_improvement(has_improved:bool, metric: str):
+    message=f'{metric} did {"" if has_improved else "not "}improve'
+    logging.info(message)
 
 
 def get_fastest_lap(complete_laps: pd.DataFrame) -> float:
@@ -129,38 +201,29 @@ def get_fastest_lap(complete_laps: pd.DataFrame) -> float:
     return fastest_lap
         
 
-def check_consistency_improved(complete_times: pd.Series, current_best_consistency: int) -> bool:
+def check_consistency_improved(complete_times: pd.Series, current_best_consistency: float) -> ImprovementCheck:
     """Check if the consistency of the model has improved by comparing the standard deviation of the time to complete a lap"""
-    consistency = complete_times.std()
-    logging.info(f'Consistency: {consistency}')
-    if consistency < current_best_consistency:
-        logging.info('Consistency improved')
-        return True
-    else:
-        logging.info('Consistency did not improve')
-        return False
+    standard_deviation = complete_times.std()
+    logging.info(f'STD: {standard_deviation}, Mean: {complete_times.mean()}, Current best STD: {current_best_consistency}')
+    has_improved = standard_deviation < current_best_consistency
+    log_improvement(has_improved, 'Consistency')
+    return ImprovementCheck(has_improved, min(standard_deviation, current_best_consistency))
     
     
-def check_completion_rate_improved(average_completion: pd.Series, current_best_completion: int) -> bool:
+def check_completion_rate_improved(average_completion: pd.Series, new_best_completion: float) -> ImprovementCheck:
     """Check if the completion rate of the model has improved by comparing the average completion rate of the training or evaluation runs"""
-    completion_rate = average_completion.max()
-    logging.info(f'Completion rate: {completion_rate}')
-    if completion_rate > current_best_completion:
-        logging.info('Completion rate improved')
-        return True
-    else:
-        logging.info('Completion rate did not improve')
-        return False
+    current_best_completion = average_completion.max()
+    logging.info(f'Current: {current_best_completion}%, New best completion rate: {new_best_completion}%')
+    has_improved = new_best_completion > current_best_completion
+    log_improvement(has_improved, 'Completion rate')
+    return ImprovementCheck(has_improved, max(new_best_completion, current_best_completion))
  
     
-def check_reward_improved(reward_ds: pd.Series, current_max_reward:float) -> bool:
+def check_reward_improved(reward_ds: pd.Series, current_max_reward:float) -> ImprovementCheck:
     max_reward= reward_ds.max()
-    if max_reward > current_max_reward:
-        logging.info('Reward improved')
-        return True
-    else:
-        logging.info('Reward did not improve')
-        return False
+    has_improved = max_reward > current_max_reward
+    log_improvement(has_improved, 'Reward')
+    return ImprovementCheck(has_improved, max(max_reward, current_max_reward))
     
     
 if __name__ == '__main__':
@@ -197,15 +260,20 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
 
-    # Constants
-    BUCKET=args['bucket']
-    PREFIX=args['prefix']
-    AG_METHOD = args.get('method')
-    REFRESH_TIME_S = args.get('min_check', 0) * 60
-    ROLLING_AVERAGE = args.get('rolling_average')
-    MAX_PATIENCE = args.get('patience',0)
-    MIN_DELTA = args.get('min_delta', 0)
-    MONITOR = args.get('monitor',[])
+
+    
+    program_args=EarlyStoppingArgs(
+        bucket=args.get('bucket', 'bucket'),
+        prefix=args.get('prefix', 'rl-deepracer-sagemaker'),
+        ag_method=AggregationMethod(args.get('method')),
+        refresh_time_s=args.get('min_check', 0) * 60,
+        rolling_average=args.get('rolling_average', 0),
+        max_patience=args.get('patience', 10),
+        min_delta=args.get('min_delta', 0),
+        monitor_options=args.get('monitor',[])
+    )
+    
     while True:
-        check_stats()
-        time.sleep(REFRESH_TIME_S)
+        best_results=check_stats(program_args, current_best_results)
+        current_best_results=best_results
+        time.sleep(program_args.REFRESH_TIME_S)
