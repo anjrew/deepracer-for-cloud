@@ -36,5 +36,10 @@ steering_topics [
     docker build -t anjrew-deepracer-robomaker-controller:latest -f ./Dockerfile.controller .
 ```
 
+## Get the IP of the  RoboContainer
+```bash
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' robo_container_id
+```
+
 ### run
-```docker run --rm --privileged -it anjrew-deepracer-robomaker-controller:latest```
+```docker run -e ROS_MASTER_URI=http://<robo_ip>:11311 --rm --privileged -it --net sagemaker-local anjrew-deepracer-robomaker-controller:latest```

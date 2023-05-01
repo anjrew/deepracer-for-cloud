@@ -10,7 +10,8 @@ RUN apt-get update && \
 # Install required Python packages
 RUN pip install --no-cache-dir \
         catkin_pkg \
-        rospkg
+        rospkg \
+        pygame
 
 # Set the working directory
 WORKDIR /app
