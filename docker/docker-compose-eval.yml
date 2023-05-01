@@ -10,7 +10,7 @@ services:
     image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
     command: ["/bin/bash", "-c", "echo No work for coach in Evaluation Mode"]
   robomaker:
-    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE_TAG}
+    image: ${DR_ROBOMAKER_IMAGE_NAME}:${DR_ROBOMAKER_IMAGE_TAG}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:
       - "${DR_ROBOMAKER_EVAL_PORT}:8080"
