@@ -245,7 +245,7 @@ then
     bash -c "source $INSTALL_DIR/bin/autorun.sh"
 fi
 
-# Build executer image
+echo "Building executer image"
 docker build \
--t deep-racer-executer:latest 
--f ${$INSTALL_DIR}/docker/build/python-script-executer/Dockerfile.python-script-executer ${$INSTALL_DIR}/docker/build/python-script-executer/
+-t deep-racer-executer:latest \
+-f ${INSTALL_DIR}/docker/build/python-script-executer/Dockerfile.python-script-executer ${INSTALL_DIR}/docker/build/python-script-executer/
