@@ -9,7 +9,7 @@ services:
   rl_coach:
     image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
     environment:
-      - SAGEMAKER_IMAGE=${DR_SAGEMAKER_IMAGE}
+      - SAGEMAKER_IMAGE_TAG=${DR_SAGEMAKER_IMAGE_TAG}
       - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}
       - PRETRAINED_S3_PREFIX=${DR_LOCAL_S3_PRETRAINED_PREFIX}
       - PRETRAINED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
@@ -23,7 +23,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
   robomaker:
-    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
+    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE_TAG}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:
       - "${DR_ROBOMAKER_TRAIN_PORT}:8080"

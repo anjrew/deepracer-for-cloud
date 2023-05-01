@@ -7,7 +7,7 @@ networks:
 
 services:
   robomaker:
-    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
+    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE_TAG}
     # command: ["./run.sh run distributed_training.launch"]
     command: ["python3 -c \"while True: print('yay')\""]
     # tty: true 

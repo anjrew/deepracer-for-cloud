@@ -35,8 +35,8 @@ WORLD_NAME=FS_June2020
 DR_WORKERS=1
 
 ## select which images you want to use.  these will be used later for a docker pull
-DR_SAGEMAKER_IMAGE=cpu-avx-mkl
-DR_ROBOMAKER_IMAGE=cpu-avx2
+DR_SAGEMAKER_IMAGE_TAG=cpu-avx-mkl
+DR_ROBOMAKER_IMAGE_TAG=cpu-avx2
 
 ## check the s3 location for existing training folders
 ## automatically determine the latest training run (highest number), and set model parameters accordingly
@@ -102,7 +102,7 @@ sed -i.bak -re "s/(DR_UPLOAD_S3_PREFIX=).*$/\1$DR_UPLOAD_S3_PREFIX/g" "$CONFIG_F
 sed -i.bak -re "s/(DR_WORLD_NAME=).*$/\1$WORLD_NAME/g" "$CONFIG_FILE"
 
 ## Replace static paramaters in system.env file, including sagemaker and robomaker images (still local to your directory) and the number of DR_workers
-sed -i.bak -re "s/(DR_UPLOAD_S3_BUCKET=).*$/\1$DR_UPLOAD_S3_BUCKET/g; s/(DR_SAGEMAKER_IMAGE=).*$/\1$DR_SAGEMAKER_IMAGE/g; s/(DR_ROBOMAKER_IMAGE=).*$/\1$DR_ROBOMAKER_IMAGE/g; s/(DR_WORKERS=).*$/\1$DR_WORKERS/g" "$OLD_SYSTEMENV"
+sed -i.bak -re "s/(DR_UPLOAD_S3_BUCKET=).*$/\1$DR_UPLOAD_S3_BUCKET/g; s/(DR_SAGEMAKER_IMAGE_TAG=).*$/\1$DR_SAGEMAKER_IMAGE_TAG/g; s/(DR_ROBOMAKER_IMAGE_TAG=).*$/\1$DR_ROBOMAKER_IMAGE_TAG/g; s/(DR_WORKERS=).*$/\1$DR_WORKERS/g" "$OLD_SYSTEMENV"
 
 ## upload the new run.env and system.env files into your S3 bucket (same s3 location identified earlier)
 ## files are loaded into the node-config folder/prefix.  You can also upload other files to node config, and they

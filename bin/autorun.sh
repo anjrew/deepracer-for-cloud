@@ -17,11 +17,11 @@ aws s3 sync s3://$S3_LOCATION $INSTALL_DIR_TEMP
 
 ## get the right docker containers, if needed
 SYSENV="$INSTALL_DIR_TEMP/system.env"
-SAGEMAKER_IMAGE=$(cat $SYSENV | grep DR_SAGEMAKER_IMAGE | sed 's/.*=//')
-ROBOMAKER_IMAGE=$(cat $SYSENV | grep DR_ROBOMAKER_IMAGE | sed 's/.*=//')
+SAGEMAKER_IMAGE_TAG=$(cat $SYSENV | grep DR_SAGEMAKER_IMAGE_TAG | sed 's/.*=//')
+ROBOMAKER_IMAGE_TAG=$(cat $SYSENV | grep DR_ROBOMAKER_IMAGE_TAG | sed 's/.*=//')
 
-docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_IMAGE
-docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_IMAGE
+docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_IMAGE_TAG
+docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_IMAGE_TAG
 
 dr-reload
 
