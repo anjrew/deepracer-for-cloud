@@ -1,0 +1,22 @@
+# Use the official ROS Melodic base image
+FROM ros:melodic
+
+# Install python-pip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python-pip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install required Python packages
+RUN pip install --no-cache-dir \
+        catkin_pkg \
+        rospkg
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the controller script
+COPY controller.py controller.py
+
+# Set the command to run the controller script
+CMD ["python", "controller.py"]

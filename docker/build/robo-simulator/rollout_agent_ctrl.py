@@ -495,19 +495,24 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
         '''
         # Don't send action 
         ignore_action = os.environ.get('IGNORE_ACTION', 'False')
-        print("send_action 499", ignore_action)
+        print("ignore_action 498", ignore_action)
         if ignore_action == 'True' or ignore_action == 'true':
             LOG.debug("Ignore action dispatch")
             return
     
         if self._ctrl_status[AgentCtrlStatus.AGENT_PHASE.value] == AgentPhase.RUN.value:
             json_action = self._model_metadata_.get_action_dict(action)
+            print('Sending action', action)
 
             steering_angle = float(json_action[ModelMetadataKeys.STEERING_ANGLE.value])
+            print('steering angle before processing', steering_angle)
             # Clip the angle to be between min and max angle allowed
             steering_angle = max(min(const.MAX_ANGLE, steering_angle), const.MIN_ANGLE)
             steering_angle = steering_angle * math.pi / 180.0
             action_speed = self._update_speed(action)
+            print("self._velocity_pub_dict_,", self._velocity_pub_dict_)
+            print("self._steering_pub_dict_", self._steering_pub_dict_)
+            print("send_action 511", steering_angle, action_speed)
             send_action(self._velocity_pub_dict_, self._steering_pub_dict_,
                         steering_angle, action_speed)
         elif self._ctrl_status[AgentCtrlStatus.AGENT_PHASE.value] in ZERO_SPEED_AGENT_PHASES:
