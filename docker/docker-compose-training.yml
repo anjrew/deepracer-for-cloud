@@ -6,7 +6,7 @@ networks:
     name: sagemaker-local
 
 services:
-  rl_coach: &rl_coach_base
+  rl_coach:
     image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
     environment:
       - SAGEMAKER_IMAGE_TAG=${DR_SAGEMAKER_IMAGE_TAG}
@@ -22,7 +22,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
-  robomaker: &robomaker_base
+  robomaker:
     image: ${DR_ROBOMAKER_IMAGE_NAME}:${DR_ROBOMAKER_IMAGE_TAG}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:

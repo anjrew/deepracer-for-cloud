@@ -68,5 +68,5 @@ docker run -e ROS_MASTER_URI=http://10.0.1.20:11311 --rm --privileged -it --net 
 
 ### Do it with the new Docker compose file
 ```bash
-docker-compose -f $DR_DIR/docker/docker-compose-training.yml -f $DR_DIRdocker/build/robo-simulator/docker-compose-robo-simulator.yml up
+docker-compose -f $DR_DIR/docker/docker-compose-training.yml -f $DR_DIR/docker/build/robo-simulator/docker-compose-robo-simulator.yml up
 ```
