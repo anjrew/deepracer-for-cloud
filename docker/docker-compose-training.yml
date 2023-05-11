@@ -6,7 +6,7 @@ networks:
     name: sagemaker-local
 
 services:
-  rl_coach:
+  rl_coach: &rl_coach_base
     image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
     environment:
       - SAGEMAKER_IMAGE_TAG=${DR_SAGEMAKER_IMAGE_TAG}
@@ -22,14 +22,13 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
-  robomaker:
+  robomaker: &robomaker_base
     image: ${DR_ROBOMAKER_IMAGE_NAME}:${DR_ROBOMAKER_IMAGE_TAG}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:
       - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
-      - IGNORE_ACTION=${DR_IGNORE_ACTION}
       - WORLD_NAME=${DR_WORLD_NAME}
       - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
       - SAGEMAKER_SHARED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}

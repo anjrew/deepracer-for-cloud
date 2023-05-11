@@ -5,6 +5,7 @@ FROM ros:melodic
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python-pip && \
+        iputils-ping \
     rm -rf /var/lib/apt/lists/*
 
 # Install required Python packages

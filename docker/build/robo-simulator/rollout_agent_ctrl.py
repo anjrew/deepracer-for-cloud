@@ -522,7 +522,7 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
                   format(self._ctrl_status[AgentCtrlStatus.AGENT_PHASE.value]))
 
     def update_agent(self, action):
-        '''Update agent reward and metrics ater the action is taken
+        '''Update agent reward and metrics after the action is taken
 
         Args:
             action (int): model metadata action_space index

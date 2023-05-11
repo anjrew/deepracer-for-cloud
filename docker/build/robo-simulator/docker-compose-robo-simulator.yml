@@ -1,0 +1,15 @@
+version: "3.7"
+
+services:
+  rl_coach:
+    <<: *rl_coach_base
+    
+
+  robomaker:
+    <<: *robomaker_base
+    build:
+      context: .
+      dockerfile: Dockerfile.robomaker
+    environment:
+      - IGNORE_ACTION=False
+    
