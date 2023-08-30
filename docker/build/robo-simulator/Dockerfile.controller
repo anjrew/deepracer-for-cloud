@@ -19,6 +19,7 @@ WORKDIR /app
 
 # Copy the controller script
 COPY controller.py controller.py
+COPY setup.sh setup.sh
 
 # Set the command to run the controller script
-CMD ["python", "controller.py"]
+CMD ["bash", "setup.sh"]
