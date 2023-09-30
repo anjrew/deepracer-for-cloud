@@ -7,13 +7,16 @@ services:
     ports:
       - 5555:5432
     environment:
-      - POSTGRES_USER=$POSTGRES_USER
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=deep-racer-logs
     volumes:
+      - postgres_data:/var/lib/postgresql/data
       - ./sql/db_creator.sql:/docker-entrypoint-initdb.d/init-schema.sql
 
   datacollector:
+    depends_on:
+      - postgresdb
     build:
       context: .
       dockerfile: Dockerfile.data-storage
