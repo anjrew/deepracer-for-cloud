@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 import argparse
 import os
 import json
@@ -136,13 +134,9 @@ with open(f'{custom_files_folder}/hyperparameters.json', 'r') as f:
             VALUES 
             (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;"""
 
-#   pg.execute(query, (tweet_id, text, compound, pos, neg, neu, cleaned_text,user_info['username'], user_info['id'])) 
     
 with open(f'{custom_files_folder}/model_metadata.json', 'r') as f:
   model_metadata = json.load(f)
 
 with open(f'{custom_files_folder}/reward_function.py', 'r') as f:
     lines = f.readlines()
-    
-# Output: {'name': 'Bob', 'languages': ['English', 'French']}
-# print(data)

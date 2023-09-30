@@ -12,7 +12,7 @@ Example of running the executer
 """bash
     docker run \
     --rm \
-    -v ${PWD}/scripts/local_console/local_console.py:/app/script.py \
+    -v ${DR_DIR}/scripts/local_console/local_console.py:/app/script.py \
     --name executer \
     deep-racer-executer:latest \
     python /app/script.py

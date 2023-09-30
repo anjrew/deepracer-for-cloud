@@ -1,3 +1,7 @@
+## Prerequisites
+
+- Make sure the environment is activated and setup
+
 ## BUILD
 
 From within the folder containing the Dockerfile
@@ -7,16 +11,14 @@ From within the folder containing the Dockerfile
 
 
 ## RUN
-Example of running the data-storage
+Example of running the data-storage from the ROOT of the project
 
-<!-- """bash
+'''bash
     docker run \
     --rm \
-    -v ${PWD}/scripts/local_console/local_console.py:/app/script.py \
     --name data-storage \
-    deep-racer-data-storage:latest \
-    python /app/script.py
-""" -->
+    deep-racer-data-storage:latest
+''' 
 
 ## Dump Database 
 
