@@ -20,3 +20,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.data-storage
+    volumes:
+      - ${DR_DIR}/system.env:/app/system.env
+      - ${DR_DIR}/run.env:/app/run.env
+      - ${DR_DIR}/custom_files:/app/custom_files
+      - ./sql:/app/sql
+
+volumes:
+  postgres_data:

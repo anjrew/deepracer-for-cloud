@@ -1,37 +1,54 @@
 import argparse
 import os
 import json
-from sqlalchemy import create_engine
-
-
-
-DIR = os.getenv('DR_DIR',os.path.dirname(os.path.realpath(__file__) + '/../../../..'))
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
+import time
 
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-s", "--system-env-path", dest="system_env_path",
-                    help="The path location for the file with system environment variables", metavar="system_env_path", default=f'{DIR}/system.env')
+                    help="The path location for the file with system environment variables", metavar="system_env_path", default=f'./system.env')
 
 parser.add_argument("-r", "--run-env-path", dest="run_env_path",
-                    help="The path location for the file with run environment variables", metavar="run_env_path", default=f'{DIR}/run.env')
+                    help="The path location for the file with run environment variables", metavar="run_env_path", default=f'./run.env')
 
 parser.add_argument("-u", "--user", dest="db_username",
-                    help="The username for the database", metavar="db_username", default='admin')
+                    help="The username for the database", metavar="db_username", default='postgres')
 
 parser.add_argument("-pw", "--password", dest="db_password",
-                    help="The password for the database", metavar="db_password", default='admin')
+                    help="The password for the database", metavar="db_password", default='password')
 
 parser.add_argument("-p", "--port", dest="db_port",
                     help="The port of the db", metavar="db_port", default=5432)
 
 parser.add_argument("-n", "--name", dest="db_name",
-                    help="The name of the db", metavar="db_name", default=5432)
+                    help="The name of the db", metavar="db_name", default='deep-racer-logs')
 
 
 args = vars(parser.parse_args())
 
-pg = create_engine(f"postgresql://{args['db_username']}:{args['db_password']}@postgresdb:{args['db_port']}/{args['db_name']}", echo=True)
+pg = None
+Session = None
+
+max_attempts = 10  # Maximum number of connection attempts
+sleep_seconds = 5  # Time to wait between each attempt
+
+for attempt in range(max_attempts):
+    try:
+        pg = create_engine(f"postgresql://{args['db_username']}:{args['db_password']}@postgresdb:{args['db_port']}/{args['db_name']}", echo=True)
+        pg.connect()
+        Session = sessionmaker(bind=pg)
+        print("Database connection successful.")
+        break
+    except OperationalError:
+        print(f"Database connection failed. Retrying in {sleep_seconds} seconds ({attempt+1}/{max_attempts})...")
+        time.sleep(sleep_seconds)
+else:
+    print("Max connection attempts reached. Exiting.")
+    exit(1)
 
 
 run_env_path=args['system_env_path']
@@ -58,7 +75,7 @@ def parse_value(val: str):
         return val
     
 def get_env_file_data(abs_path: str):
-    env_vars = {} # or dict {}
+    env_vars = {} # or dict {}session
     with open(abs_path) as f:
         for line in f:
             if line.startswith('#') or not line.strip():
@@ -74,6 +91,17 @@ def get_env_file_data(abs_path: str):
             env_vars[key.lower().replace('dr_', '')] = parse_value(value) # Save to a list
     return env_vars
 
+
+# Function to execute SQL file
+def execute_sql_file(engine, sql_file_path):
+    with open(sql_file_path, 'r') as f:
+        sql_commands = f.read().split(';')
+        for command in sql_commands:
+            if command.strip():
+                try:
+                    engine.execute(command)
+                except SQLAlchemyError as e:
+                    print(f"An error occurred while executing SQL command: {e}")
     
 run_vars = get_env_file_data(run_env_path)
 
@@ -118,25 +146,33 @@ keys_of_interest = set([
     'h2b_bot_car_penalty'
 ])
 
-    
+print('----------- Run Vars --------------')
 for key, value in run_vars.items():
     print(f'{key} = {value}')
     
+print('----------- System Vars --------------')
 for key, value in system_vars.items():
     print(f'{key} = {value}')
       
-custom_files_folder = f'{DIR}/custom_files/'
+custom_files_folder = f'./custom_files/'
 
 with open(f'{custom_files_folder}/hyperparameters.json', 'r') as f:
-  hyperparameters = json.load(f)
-  query = """INSERT INTO hyperparameters 
-            (id, text, compound_score, pos_score, neg_score, neu_score, cleaned_text, username, user_id)
-            VALUES 
-            (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;"""
+    hyperparameters = json.load(f)
+    print('----------- Adding hyper params to table --------------', hyperparameters)
 
-    
+    columns = ', '.join(hyperparameters.keys())
+    placeholders = ', '.join([f':{key}' for key in hyperparameters.keys()])
+    query = f"INSERT INTO hyperparameters ({columns}) VALUES ({placeholders}) ON CONFLICT DO NOTHING;"
+
+    with Session() as session:
+            result = session.execute(text(query), hyperparameters)       
+            session.commit()
+
+
 with open(f'{custom_files_folder}/model_metadata.json', 'r') as f:
-  model_metadata = json.load(f)
+    print('----------- Adding model meta data to table --------------')
+    model_metadata = json.load(f)
 
 with open(f'{custom_files_folder}/reward_function.py', 'r') as f:
+    print('----------- Adding reward function to the table --------------')
     lines = f.readlines()

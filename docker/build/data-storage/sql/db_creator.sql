@@ -25,7 +25,7 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE public.action_configs (
-    id smallint NOT NULL,
+    id SERIAL PRIMARY KEY,
     is_continuous boolean NOT NULL
 );
 
@@ -37,7 +37,7 @@ ALTER TABLE public.action_configs OWNER TO postgres;
 --
 
 CREATE TABLE public.continuous_action_spaces (
-    id smallint NOT NULL,
+    id SERIAL PRIMARY KEY,
     speed_min smallint NOT NULL,
     speed_max smallint NOT NULL,
     steering_left_max smallint NOT NULL,
@@ -52,7 +52,7 @@ ALTER TABLE public.continuous_action_spaces OWNER TO postgres;
 --
 
 CREATE TABLE public.discreate_action_spaces (
-    id smallint NOT NULL,
+    id SERIAL PRIMARY KEY,
     steering_angle smallint NOT NULL,
     speed smallint NOT NULL
 );
@@ -65,7 +65,7 @@ ALTER TABLE public.discreate_action_spaces OWNER TO postgres;
 --
 
 CREATE TABLE public.hyperparameters (
-    id smallint NOT NULL,
+    id SERIAL PRIMARY KEY,
     batch_size smallint NOT NULL,
     beta_entropy numeric NOT NULL,
     discount_factor numeric NOT NULL,
@@ -97,7 +97,7 @@ COMMENT ON COLUMN public.hyperparameters.lr IS 'The learning rate';
 --
 
 CREATE TABLE public.machine (
-    id smallint NOT NULL,
+    id SERIAL PRIMARY KEY,
     name character varying NOT NULL
 );
 
@@ -109,7 +109,7 @@ ALTER TABLE public.machine OWNER TO postgres;
 --
 
 CREATE TABLE public.training_runs (
-    id smallint NOT NULL,
+    id SERIAL PRIMARY KEY,
     model_name character varying(30) NOT NULL,
     model_cloned_from character varying(30),
     start_time timestamp without time zone NOT NULL,
