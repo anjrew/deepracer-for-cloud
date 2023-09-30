@@ -2,7 +2,10 @@
 print("Starting script")
 
 import pygame
+import sys
+print(sys.version)
 import rospy
+print(rospy.__file__)
 from std_msgs.msg import Float64
 import logging
 

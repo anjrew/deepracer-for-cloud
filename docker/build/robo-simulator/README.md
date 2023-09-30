@@ -36,6 +36,12 @@ steering_topics [
     docker build -t anjrew-deepracer-robomaker-controller:latest -f ./Dockerfile.controller .
 ```
 
+# Robomaker container
+```bash
+    docker build -t anjrew-deepracer-robomaker-simulator:latest -f ./Dockerfile.robomaker .
+```
+## Build
+
 ## Get the IP of the  RoboContainer
 ```bash
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' robo_container_id

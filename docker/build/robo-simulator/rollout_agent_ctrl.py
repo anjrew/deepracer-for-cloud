@@ -494,9 +494,9 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
             GenericRolloutException: Agent phase is not defined
         '''
         # Don't send action 
-        ignore_action = os.environ.get('IGNORE_ACTION', 'False')
+        ignore_action = os.environ.get('IGNORE_ACTION', True)
         print("ignore_action 498", ignore_action)
-        if ignore_action == 'True' or ignore_action == 'true':
+        if ignore_action == 'True' or ignore_action == 'true' or ignore_action:
             LOG.debug("Ignore action dispatch")
             return
     
