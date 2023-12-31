@@ -12,6 +12,7 @@ services:
     volumes:
       - ../..:/workspaces:cached
       - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.aws/:/root/.aws/:cached
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity

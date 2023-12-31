@@ -20,7 +20,8 @@
 	"customizations": {
 		"vscode": {
 			"settings": {
-				"terminal.integrated.shell.linux": "/bin/bash"
+				"terminal.integrated.shell.linux": "/bin/bash",
+				"terminal.integrated.shellArgs.linux": ["-c", "source bin/activate && exec bash"]
 			},
 			"extensions": [
 				"ms-python.python",
@@ -31,10 +32,12 @@
 				"ms-azuretools.vscode-docker",
 				"formulahendry.docker-explorer",
 				"ms-python.vscode-pylance",
-				"mhutchie.git-graph"
+				"mhutchie.git-graph",
+				"solomonkinard.git-blame"
 			]
 		}
 	},
+
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	"remoteUser": "root",
 	"initializeCommand": "ls"
