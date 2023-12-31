@@ -168,11 +168,85 @@ with open(f'{custom_files_folder}/hyperparameters.json', 'r') as f:
             result = session.execute(text(query), hyperparameters)       
             session.commit()
 
-
+action_space_id = None
 with open(f'{custom_files_folder}/model_metadata.json', 'r') as f:
     print('----------- Adding model meta data to table --------------')
     model_metadata = json.load(f)
+    
+    action_space=model_metadata['action_space']
+    if model_metadata['action_space_type'] == 'continuous':        
+        ## First try and insert into the continuous action space table
+        query = """
+        INSERT INTO 
+            continuous_action_spaces 
+                (speed_min, speed_max, steering_left_max, steering_right_max) 
+        VALUES 
+            (:speed_min, :speed_max, :steering_left_max, :steering_right_max)
+        RETURNING id;
+        """
+         
+        values = {
+            'speed_min': action_space['speed']['low'], 
+            'speed_max': action_space['speed']['high'], 
+            'steering_left_max': action_space['steering_angle']['low'], 
+            'steering_right_max': action_space['steering_angle']['high']
+        }
+        with Session() as session:
+                result = session.execute(text(query), {'values': True})       
+                session.commit()
+                action_space_id = result.fetchone()[0]
+    
+    else:
+        columns = ', '.join(model_metadata.keys())
+        placeholders = ', '.join([f':{key}' for key in model_metadata.keys()])
+        query = f"INSERT INTO hyperparameters ({columns}) VALUES ({placeholders}) ON CONFLICT DO NOTHING;"
 
+        with Session() as session:
+                result = session.execute(text(query), model_metadata)       
+                session.commit()
+                
+     ## Only do this if we do not have a matching entry in continuous_action_space_configs
+    query = "INSERT INTO action_configs (is_continuous) VALUES (:is_continuous)"
+    with Session() as session:
+        result = session.execute(text(query), {'is_continuous': True})       
+        session.commit()
+        action_space_id = result.fetchone()[0]
+
+
+reward_function_text = ''
 with open(f'{custom_files_folder}/reward_function.py', 'r') as f:
     print('----------- Adding reward function to the table --------------')
-    lines = f.readlines()
+    reward_function_text = f.readlines()
+
+columns = ', '.join(hyperparameters.keys())
+placeholders = ', '.join([f':{key}' for key in hyperparameters.keys()])
+values = {
+    'model_name': system_vars['local_s3_model_prefix'],
+    'model_cloned_from': system_vars['local_s3_pretrained_prefix'],
+    'start_time': 'now()',
+    'stop_time': 'now()',
+    'worker_amount': run_vars['workers'],
+    'reward_function': model_metadata,
+    'hyperparameters_id': reward_function_text,
+    'action_space_id': action_space_id,
+    'training_remark': '',
+    'machine_id': '',
+    'best_lap_time': '',
+    'average_lap_time': '',
+    'end_training_completion_rate_percent': '',
+    'end_eval_completion_percent': '',
+}
+
+query = f"""
+    INSERT INTO 
+        training_runs
+            ({columns})
+    VALUES
+        ({placeholders});
+    """
+    
+
+with Session() as session:
+        result = session.execute(text(query), hyperparameters)       
+        session.commit()
+

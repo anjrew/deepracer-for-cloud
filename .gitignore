@@ -25,3 +25,5 @@ __pycache__/
 /*.sh
 _
 .
+
+*.pytest_cache
