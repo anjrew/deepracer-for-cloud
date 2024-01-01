@@ -45,3 +45,6 @@ services:
       - ROS_MASTER_URI=http://localhost:11311/
       - ROS_HOSTNAME=localhost
     init: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb # Forwards the local USB devices to the container.
+      - /dev/input:/dev/input # Forwards the local input devices to the container.

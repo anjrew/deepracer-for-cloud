@@ -6,14 +6,6 @@ RUN pip install --no-cache-dir \
 
 COPY ./start.sh /start.sh
 
-COPY ./rollout_agent_ctrl.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/agent_ctrl/rollout_agent_ctrl.py
-
-COPY ./deepracer_racetrack_env.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/environments/deepracer_racetrack_env.py
-
-COPY ./multi_agent_environment.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/multi_agent_coach/multi_agent_environment.py
-COPY ./multi_agent_graph_manager.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/multi_agent_coach/multi_agent_graph_manager.py
-COPY ./multi_agent_level_manager.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/multi_agent_coach/multi_agent_level_manager.py
-COPY ./env_utils.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/multi_agent_coach/env_utils.py
 COPY ./rl_coach_agent.py /usr/local/lib/python3.6/dist-packages/rl_coach/agents/agent.py
 
 # Copy the controller script

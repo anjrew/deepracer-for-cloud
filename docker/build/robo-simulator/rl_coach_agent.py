@@ -21,6 +21,7 @@ from typing import Dict, List, Union, Tuple
 
 import numpy as np
 from six.moves import range
+import pygame
 
 from rl_coach.agents.agent_interface import AgentInterface
 from rl_coach.architectures.network_wrapper import NetworkWrapper
@@ -47,6 +48,12 @@ class Agent(AgentInterface):
         :param agent_parameters: A AgentParameters class instance with all the agent parameters
         """
         super().__init__()
+        
+        try:
+            self.initialize_game_controller()
+        except Exception as e:
+            print("Error initializing game controller: {}".format(e))
+            
         # use seed
         if agent_parameters.task_parameters.seed is not None:
             random.seed(agent_parameters.task_parameters.seed)
@@ -806,7 +813,7 @@ class Agent(AgentInterface):
         :param curr_state: the current state to act upon.
         :return: chosen action, some action value describing the action (q-value, probability, etc)
         """
-        print("In achoose action and about to pass")
+        print(">>>>>>>>>>>>>>>> In choose action and about to pass <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         pass
 
     def prepare_batch_for_inference(self, states: Union[Dict[str, np.ndarray], List[Dict[str, np.ndarray]]],
@@ -833,6 +840,27 @@ class Agent(AgentInterface):
 
         return batches_dict
 
+    def initialize_game_controller(self):
+        pygame.init()
+        pygame.joystick.init()
+        # Assuming only one controller connected
+        self.joystick = pygame.joystick.Joystick(0)
+        self.joystick.init()
+
+    def get_controller_action(self):
+        pygame.event.pump()  # Process event queue
+        # Example: assuming a controller with two axes
+        x_axis = self.joystick.get_axis(0)
+        y_axis = self.joystick.get_axis(1)
+        # Convert these axis values into an action
+        action = self.convert_axes_to_action(x_axis, y_axis)
+        return action
+
+    def convert_axes_to_action(self, x_axis, y_axis):
+        # Implement this method to convert axis values to a Gym action
+        # This highly depends on your specific Gym environment
+        pass
+
     def act(self, action: Union[None, ActionType]=None) -> ActionInfo:
         """
         Given the agents current knowledge, decide on the next action to apply to the environment
@@ -841,8 +869,8 @@ class Agent(AgentInterface):
         :return: An ActionInfo object, which contains the action and any additional info from the action decision process
         """
         
-        print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<<<<<<<<<<<<<")
-        
+        print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<")
+        print(self.ap)
         
         if self.phase == RunPhase.TRAIN and self.ap.algorithm.num_consecutive_playing_steps.num_steps == 0:
             # This agent never plays  while training (e.g. behavioral cloning)
@@ -870,10 +898,10 @@ class Agent(AgentInterface):
                     curr_state = self.run_pre_network_filter_for_inference(self.curr_state, update_filter_internal_state)
 
                 else:
+                    print(">>>>>>>> Assigning current state <<<<<<<<<<<<<<<<<<<<<<<")
                     curr_state = self.curr_state
                     
                 action = self.choose_action(curr_state)
-                print("Final action in act", action)
                 assert isinstance(action, ActionInfo)
 
         self.last_action_info = action
@@ -883,7 +911,7 @@ class Agent(AgentInterface):
         # can no longer use the transition in it's replay buffer. It is possible that these filters
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
-        print("filtered_action_info", filtered_action_info)
+        print("filtered_action_info", filtered_action_info.__dict__)
 
         return filtered_action_info
 
@@ -896,6 +924,7 @@ class Agent(AgentInterface):
         :param update_filter_internal_state: Should update the filter's internal state - should not update when evaluating
         :return: The filtered state
         """
+        print("run_pre_network_filter_for_inference")
         dummy_env_response = EnvResponse(next_state=state, reward=0, game_over=False)
         return self.pre_network_filter.filter(dummy_env_response,
                                               update_internal_state=update_filter_internal_state)[0].next_state
