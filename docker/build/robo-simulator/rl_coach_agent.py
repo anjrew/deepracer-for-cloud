@@ -806,6 +806,7 @@ class Agent(AgentInterface):
         :param curr_state: the current state to act upon.
         :return: chosen action, some action value describing the action (q-value, probability, etc)
         """
+        print("In achoose action and about to pass")
         pass
 
     def prepare_batch_for_inference(self, states: Union[Dict[str, np.ndarray], List[Dict[str, np.ndarray]]],
@@ -841,8 +842,7 @@ class Agent(AgentInterface):
         """
         
         print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<<<<<<<<<<<<<")
-        print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<<<<<<<<<<<<<")
-        print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<<<<<<<<<<<<<")
+        
         
         if self.phase == RunPhase.TRAIN and self.ap.algorithm.num_consecutive_playing_steps.num_steps == 0:
             # This agent never plays  while training (e.g. behavioral cloning)
@@ -856,10 +856,14 @@ class Agent(AgentInterface):
         # decide on the action
         if action is None:
             if self.phase == RunPhase.HEATUP and not self.ap.algorithm.heatup_using_network_decisions:
+                print(">>>>>>>> Getting random action <<<<<<<<<<<<<<<<<<<<<<<<<")
+                print(self.spaces.action)
                 # random action
                 action = self.spaces.action.sample_with_info()
             else:
                 # informed action
+                print(">>>>>>>> Getting informed action <<<<<<<<<<<<<<<<<<<<<<<<<")
+
                 if self.pre_network_filter is not None:
                     # before choosing an action, first use the pre_network_filter to filter out the current state
                     update_filter_internal_state = self.phase is not RunPhase.TEST
@@ -867,7 +871,9 @@ class Agent(AgentInterface):
 
                 else:
                     curr_state = self.curr_state
+                    
                 action = self.choose_action(curr_state)
+                print("Final action in act", action)
                 assert isinstance(action, ActionInfo)
 
         self.last_action_info = action
@@ -877,6 +883,7 @@ class Agent(AgentInterface):
         # can no longer use the transition in it's replay buffer. It is possible that these filters
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
+        print("filtered_action_info", filtered_action_info)
 
         return filtered_action_info
 
