@@ -870,16 +870,50 @@ class Agent(AgentInterface):
         """
         
         print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<")
+        
         try:
-            for attr in dir(self.ap):
-                # Filter out special methods and properties
-                if not attr.startswith("__"):
-                    # Get the value of each attribute
-                    value = getattr(self.ap, attr)
-                    print(f"-----------------")
-                    print(f"{attr}: {value}")
+            meta_data = self.ap.env_agent.ctrl.get_model_metadata_info()
+            action_space = meta_data.action_space
+            action_space_type = meta_data.action_space_type
+            print("action_space", action_space)
+            print("action_space_type", action_space_type)
+            # for attr in dir(meta_data):
+            #     # Filter out special methods and properties
+            #     if not attr.startswith("__"):
+            #         # Get the value of each attribute
+            #         value = getattr(meta_data, attr)
+            #         print("-----------------")
+            #         print(f"{attr}: {value}")
+            
+            # # for attr in dir(self.ap):
+            # #     # Filter out special methods and properties
+            # #     if not attr.startswith("__"):
+            # #         # Get the value of each attribute
+            # #         value = getattr(self.ap, attr)
+            # #         print("-----------------")
+            # #         print(f"{attr}: {value}")
                     
-                    # if attr == 'env_agent':
+            # #         if attr == 'env_agent':
+            # #             env_obj = value
+                        
+                        
+            # #             for env_obj_attr in dir(env_obj):
+            # #                 if not env_obj_attr.startswith("__"):
+
+            # #                     env_obj_attr_value = getattr(env_obj, env_obj_attr)
+            # #                     print("-----------------")
+            # #                     print(f"{env_obj_attr}: {env_obj_attr_value}")
+                                
+            # #                     if env_obj_attr == 'ctrl':
+            # #                         ctrl_obj = env_obj_attr_value
+            # #                         for ctrl_obj_attr in dir(ctrl_obj):
+            # #                             if not ctrl_obj_attr.startswith("__"):
+            # #                                 ctrl_obj_attr_value = getattr(ctrl_obj, ctrl_obj_attr)
+            # #                                 print("-----------------")
+            # #                                 print(f"{ctrl_obj_attr}: {ctrl_obj_attr_value}")
+                            
+                    
+                        
         except Exception as e:
             print(f"Error initializing game controller: {e}")
 
