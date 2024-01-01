@@ -6,7 +6,7 @@ A Custom RL Coach controller that can be used to train RL Coach agents but with 
 
 From within the folder containing the Dockerfile build the robomaker container
 ```bash
-    docker build -t anjrew-deepracer-rl-coach:latest -f ./Dockerfile .
+docker build -t anjrew-deepracer-rl-coach:latest -f ./Dockerfile .
 ```
 
 ## Save the image

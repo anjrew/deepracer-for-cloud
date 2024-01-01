@@ -22,6 +22,8 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
+    ports:
+      - 5678:5678  # For python code debuggger
   robomaker:
     image: ${DR_ROBOMAKER_IMAGE_NAME}:${DR_ROBOMAKER_IMAGE_TAG}
     command: ["${ROBOMAKER_COMMAND}"]

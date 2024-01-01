@@ -53,6 +53,8 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
            run_phase_sink (RunPhaseSubject): Sink to receive notification of a change in run phase
            metrics (EvalMetrics/TrainingMetrics): Training or evaluation metrics
         '''
+        LOG.info("Andrew Sanity TEST 3 in init RolloutCtrl" )
+
         self._effect = None
         self._current_sim_time = 0
         self._ctrl_status = dict()
@@ -496,7 +498,7 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
         
         print("Trying to send action:"  + str(action))
         # Don't send action 
-        ignore_action = os.environ.get('IGNORE_ACTION', True)
+        ignore_action = os.environ.get('IGNORE_ACTION', False)
         print("ignore_action 498", ignore_action)
         if ignore_action == 'True' or ignore_action == 'true' or ignore_action:
             LOG.debug("Ignore action dispatch")

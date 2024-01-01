@@ -33,7 +33,7 @@ steering_topics [
 
 ## Build
 ```bash
-    docker build -t anjrew-deepracer-robomaker-controller:latest -f ./Dockerfile.controller .
+docker build -t anjrew-deepracer-robomaker-controller:latest -f ./Dockerfile.controller .
 ```
 
 # Robomaker container

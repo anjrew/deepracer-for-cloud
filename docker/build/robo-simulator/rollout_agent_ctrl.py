@@ -53,6 +53,8 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
            run_phase_sink (RunPhaseSubject): Sink to receive notification of a change in run phase
            metrics (EvalMetrics/TrainingMetrics): Training or evaluation metrics
         '''
+        LOG.info("Andrew Sanity TEST 3 in init RolloutCtrl" )
+
         self._effect = None
         self._current_sim_time = 0
         self._ctrl_status = dict()
@@ -496,7 +498,7 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
         
         print("Trying to send action:"  + str(action))
         # Don't send action 
-        ignore_action = os.environ.get('IGNORE_ACTION', True)
+        ignore_action = os.environ.get('IGNORE_ACTION', False)
         print("ignore_action 498", ignore_action)
         if ignore_action == 'True' or ignore_action == 'true' or ignore_action:
             LOG.debug("Ignore action dispatch")
@@ -514,7 +516,7 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
             action_speed = self._update_speed(action)
             print("self._velocity_pub_dict_,", self._velocity_pub_dict_)
             print("self._steering_pub_dict_", self._steering_pub_dict_)
-            print("send_action 511", steering_angle, action_speed)
+            print("send_action 517", steering_angle, action_speed)
             send_action(self._velocity_pub_dict_, self._steering_pub_dict_,
                         steering_angle, action_speed)
         elif self._ctrl_status[AgentCtrlStatus.AGENT_PHASE.value] in ZERO_SPEED_AGENT_PHASES:
