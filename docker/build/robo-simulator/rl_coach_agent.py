@@ -876,7 +876,10 @@ class Agent(AgentInterface):
                 if not attr.startswith("__"):
                     # Get the value of each attribute
                     value = getattr(self.ap, attr)
+                    print(f"-----------------")
                     print(f"{attr}: {value}")
+                    
+                    # if attr == 'env_agent':
         except Exception as e:
             print(f"Error initializing game controller: {e}")
 
