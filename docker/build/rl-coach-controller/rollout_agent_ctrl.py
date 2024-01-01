@@ -514,7 +514,7 @@ class RolloutCtrl(AgentCtrlInterface, ObserverInterface, AbstractTracker):
             action_speed = self._update_speed(action)
             print("self._velocity_pub_dict_,", self._velocity_pub_dict_)
             print("self._steering_pub_dict_", self._steering_pub_dict_)
-            print("send_action 511", steering_angle, action_speed)
+            print("send_action 517", steering_angle, action_speed)
             send_action(self._velocity_pub_dict_, self._steering_pub_dict_,
                         steering_angle, action_speed)
         elif self._ctrl_status[AgentCtrlStatus.AGENT_PHASE.value] in ZERO_SPEED_AGENT_PHASES:

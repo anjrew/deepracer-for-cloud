@@ -92,24 +92,14 @@ def show_stats():
       summary_df['train_reward_completion'] = (train_completion / 100) * train_reward
       summary_df['eval_reward_completion'] = (eval_completion / 100) * eval_reward
       
-      ax.title.set_text('Completion per iteration')  # type: ignore
-      
-      training_method_completion_label = 'Training {0} completion'.format(ag_method)
-      eval_method_completion_label = 'Eval {0} completion'.format(ag_method)
-      av_method_label = 'Average {0} completion'.format(ag_method)
-      by_label = {
-        training_method_completion_label: "blue",
-        eval_method_completion_label:"orange",
-        av_method_label: "purple"
-      }
-
-      ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth, label=training_method_completion_label, color=by_label[training_method_completion_label])
-      ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth, label=eval_method_completion_label, color=by_label[eval_method_completion_label])
-      ax.plot(master_iteration_values, average_completion.rolling(rolling_average).mean(), linewidth, label=av_method_label, color=by_label[av_method_label])
+      ax.title.set_text('Mean Completion per iteration')  # type: ignore
+      ax.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth=linewidth)
+      ax.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth=linewidth)
+      ax.plot(master_iteration_values, summary_df[['train_completion','eval_completion']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
+      ax.legend(['Train Iteration/Completion', 'Eval Iteration/Completion', 'Average Iteration/Completion'])
       ax.set_xlabel('Iteration')
       ax.set_ylabel('% Completion')
       
-      ax.legend(by_label)
 
       ax2.title.set_text('Reward vs Completion')  # type: ignore
       ax2.scatter(train_completion, summary_df['train_reward'], linewidth=linewidth)
@@ -134,13 +124,13 @@ def show_stats():
       ax4.set_xlabel('Iteration')
       ax4.set_ylabel('Reward')
       
-      ax5.title.set_text('Completion per iteration')  # type: ignore
-      ax5.plot(master_iteration_values, train_completion.rolling(rolling_average).mean(), linewidth=linewidth)
-      ax5.plot(master_iteration_values, eval_completion.rolling(rolling_average).mean(), linewidth=linewidth)
-      ax5.plot(master_iteration_values, summary_df[['train_completion','eval_completion']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
+      ax5.title.set_text('Max Completion per iteration')  # type: ignore
+      ax5.plot(master_iteration_values, train_completion.rolling(rolling_average).max(), linewidth=linewidth)
+      ax5.plot(master_iteration_values, eval_completion.rolling(rolling_average).max(), linewidth=linewidth)
+      ax5.plot(master_iteration_values, summary_df[['train_completion','eval_completion']].max(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
       ax5.legend(['Train Iteration/Completion', 'Eval Iteration/Completion', 'Average Iteration/Completion'])
       ax5.set_xlabel('Iteration')
-      ax5.set_ylabel('Completion')
+      ax5.set_ylabel('Completion %')
 
       simulation_agg = au.simulation_agg(df, secondgroup="unique_episode")
       complete_laps = simulation_agg[simulation_agg['progress']==100]
