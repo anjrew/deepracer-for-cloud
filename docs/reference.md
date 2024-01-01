@@ -62,7 +62,8 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_SAGEMAKER_IMAGE_TAG` | Determines which sagemaker image will be used for training.|
 | `DR_ROBOMAKER_IMAGE_TAG` | Determines which robomaker image will be used for training or evaluation.|
 | `DR_MINIO_IMAGE` | Determines which Minio image will be used. |
-| `DR_COACH_IMAGE` | Determines which coach image will be used for training.|
+| `DR_COACH_IMAGE_NAME` | Determines which coach image will be used for training.|
+| `DR_COACH_IMAGE_TAG` | Determines which coach image tag will be used for training.|
 | `DR_WORKERS` | Number of Robomaker workers to be used for training.  See additional documentation for more information about this feature.|
 | `DR_ROBOMAKER_MOUNT_LOGS` | True to get logs mounted to `$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX`|
 | `DR_ROBOMAKER_MOUNT_SIMAPP_DIR` | Path to the altered Robomaker bundle, e.g. `/home/ubuntu/deepracer-simapp/bundle`.|

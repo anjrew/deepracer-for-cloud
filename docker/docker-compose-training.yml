@@ -7,7 +7,7 @@ networks:
 
 services:
   rl_coach:
-    image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
+    image: ${DR_COACH_IMAGE_NAME}:${DR_COACH_IMAGE_TAG}
     environment:
       - SAGEMAKER_IMAGE_TAG=${DR_SAGEMAKER_IMAGE_TAG}
       - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}

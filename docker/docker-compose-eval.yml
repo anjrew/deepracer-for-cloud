@@ -7,7 +7,7 @@ networks:
 
 services:
   rl_coach:
-    image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
+    image: ${DR_COACH_IMAGE_NAME}:${DR_COACH_IMAGE_TAG}
     command: ["/bin/bash", "-c", "echo No work for coach in Evaluation Mode"]
   robomaker:
     image: ${DR_ROBOMAKER_IMAGE_NAME}:${DR_ROBOMAKER_IMAGE_TAG}
