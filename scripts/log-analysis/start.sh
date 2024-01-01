@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-docker run --rm -d -p "$DR_ANALYSIS_PORT:8888" \
--v `pwd`/../../data/logs:/workspace/logs \
--v `pwd`/../../docker/volumes/.aws:/root/.aws \
--v `pwd`/../../data/analysis:/workspace/analysis \
--v `pwd`/../../data/minio:/workspace/minio \
+docker run --rm -d -p "8888:8888" \
+-v $DR_DIR/data/logs:/workspace/logs \
+-v $DR_DIR/docker/volumes/.aws:/root/.aws \
+-v $DR_DIR/data/analysis:/workspace/analysis \
+-v $DR_DIR/data/minio:/workspace/minio \
 --name loganalysis \
 --network sagemaker-local \
 --shm-size 9.90gb \ 

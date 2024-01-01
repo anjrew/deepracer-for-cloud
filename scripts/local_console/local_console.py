@@ -118,7 +118,7 @@ def show_stats():
       ax2.set_ylabel('Reward')
       ax2.set_xlabel('% Completion')
 
-      ax3.title.set_text('Reward/Completion per iteration')  # type: ignore
+      ax3.title.set_text('Reward/Completion per iteration Mean')  # type: ignore
       ax3.plot(master_iteration_values, summary_df['train_reward_completion'].rolling(rolling_average).mean(), linewidth=linewidth)
       ax3.plot(master_iteration_values, summary_df['eval_reward_completion'].rolling(rolling_average).mean(), linewidth=linewidth)
       ax3.plot(master_iteration_values, summary_df[['train_reward_completion','eval_reward_completion']].mean(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
