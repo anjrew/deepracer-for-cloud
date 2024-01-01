@@ -870,8 +870,17 @@ class Agent(AgentInterface):
         """
         
         print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<")
-        print(self.ap)
-        
+        try:
+            for attr in dir(self.ap):
+                # Filter out special methods and properties
+                if not attr.startswith("__"):
+                    # Get the value of each attribute
+                    value = getattr(self.ap, attr)
+                    print(f"{attr}: {value}")
+        except Exception as e:
+            print(f"Error initializing game controller: {e}")
+
+            
         if self.phase == RunPhase.TRAIN and self.ap.algorithm.num_consecutive_playing_steps.num_steps == 0:
             # This agent never plays  while training (e.g. behavioral cloning)
             return None
