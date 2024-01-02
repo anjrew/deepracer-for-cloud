@@ -834,7 +834,7 @@ class Agent(AgentInterface):
 
         return batches_dict
     
-      def get_controller_action(self):
+    def get_controller_action(self):
         """
         Get the controller action based on the joystick axes values.
 
