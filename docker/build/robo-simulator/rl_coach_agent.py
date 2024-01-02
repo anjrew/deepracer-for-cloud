@@ -1149,7 +1149,7 @@ class Agent(AgentInterface):
             "speed": self.map_acceleration(y_axis),
         }
 
-    def map_steering(value: float) -> float:
+    def map_steering(self, value: float) -> float:
         print("Mapping steering value", value)
         # Mapping value from [-1, 1] to [30, -30]
         return 30 - (30 - (-30)) * (value - (-1)) / (1 - (-1))
