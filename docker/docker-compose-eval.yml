@@ -30,4 +30,9 @@ services:
       - RTF_OVERRIDE=${DR_EVAL_RTF}
       - ROS_MASTER_URI=http://localhost:11311/
       - ROS_IP=127.0.0.1
+      - COMPOSE_FILE=docker-compose-eval-swarm
     init: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb:rw # Forwards the local USB devices to the container.
+      - /dev/input:/dev/input:rw # Forwards the local input devices to the container.
+    privileged: true

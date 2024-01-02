@@ -7,6 +7,8 @@ services:
       - USE_EXTERNAL_X=${DR_HOST_X}
       - XAUTHORITY=/root/.Xauthority
       - QT_X11_NO_MITSHM=1
+      - COMPOSE_FILE=docker-compose-xorg
+
     volumes:
       - '/tmp/.X11-unix/:/tmp/.X11-unix'
       - '${XAUTHORITY}:/root/.Xauthority'

@@ -4,3 +4,5 @@ services:
   robomaker:
     volumes:
       - "${DR_MOUNT_DIR}:/root/.ros/log"
+    environment:
+      - COMPOSE_FILE=docker-compose-mount

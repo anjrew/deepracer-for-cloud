@@ -1,4 +1,4 @@
-version: "3.7"
+version: '3.7'
 
 networks:
   default:
@@ -31,6 +31,7 @@ services:
       - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
+      - COMPOSE_FILE=docker-compose-training
       - WORLD_NAME=${DR_WORLD_NAME}
       - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
       - SAGEMAKER_SHARED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
@@ -45,6 +46,3 @@ services:
       - ROS_MASTER_URI=http://localhost:11311/
       - ROS_HOSTNAME=localhost
     init: true
-    volumes:
-      - /dev/bus/usb:/dev/bus/usb # Forwards the local USB devices to the container.
-      - /dev/input:/dev/input # Forwards the local input devices to the container.

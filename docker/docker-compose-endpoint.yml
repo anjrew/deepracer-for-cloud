@@ -7,3 +7,4 @@ services:
   robomaker:
     environment:
       - S3_ENDPOINT_URL=${DR_MINIO_URL}
+      - COMPOSE_FILE=docker-compose-endpoint

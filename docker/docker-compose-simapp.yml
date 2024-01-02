@@ -7,3 +7,5 @@ services:
       - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/deepracer_simulation_environment:/opt/install/deepracer_simulation_environment'
       - '${DR_DIR}/data/logs:/logs'
       - '${DR_DIR}/data/scripts:/scripts'
+    environment:
+      - COMPOSE_FILE=docker-compose-simapp

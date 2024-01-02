@@ -38,7 +38,7 @@ docker build -t anjrew-deepracer-robomaker-controller:latest -f ./Dockerfile.con
 
 # Robomaker container
 ```bash
-    docker build -t anjrew-deepracer-robomaker-simulator:latest -f ./Dockerfile.robomaker .
+docker build -t anjrew-deepracer-robomaker-simulator:latest -f ./Dockerfile.robomaker .
 ```
 ## Build
 

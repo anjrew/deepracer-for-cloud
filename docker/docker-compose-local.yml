@@ -19,5 +19,7 @@ services:
       - MINIO_GID
       - MINIO_USERNAME
       - MINIO_GROUPNAME
+      - COMPOSE_FILE=docker-compose-mount
     volumes:
       - ${DR_DIR}/data/minio:/data
+  

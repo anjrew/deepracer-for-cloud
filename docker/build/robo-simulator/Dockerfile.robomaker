@@ -1,12 +1,18 @@
 FROM awsdeepracercommunity/deepracer-robomaker:5.1.0-cpu-avx2
 
+# Install necessary packages including Git and DKMS
+RUN apt-get update \
+    && apt-get install -y dkms usbutils evtest input-utils iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install required Python packages
 RUN pip install --no-cache-dir \
-        pygame
+        pygame requests
 
 COPY ./start.sh /start.sh
 
 COPY ./rl_coach_agent.py /usr/local/lib/python3.6/dist-packages/rl_coach/agents/agent.py
+COPY ./joystick_test.py joystick_test.py
 # COPY ./training_agent_factory.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/agents/training_agent_factory.py
 # COPY ./agent.py /opt/install/sagemaker_rl_agent/lib/python3.6/site-packages/markov/agents/agent.py
 

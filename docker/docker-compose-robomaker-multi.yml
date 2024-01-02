@@ -4,3 +4,5 @@ services:
   robomaker:
     volumes:
       - "${DR_DIR}/tmp/comms.${DR_RUN_ID}:/mnt/comms"
+    environment:
+      - COMPOSE_FILE=docker-compose-robomaker-multi
