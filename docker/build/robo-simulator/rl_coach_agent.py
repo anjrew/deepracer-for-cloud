@@ -1193,17 +1193,19 @@ class Agent(AgentInterface):
         """
 
         print("Current Phase", self._phase)
+        
         closest_action = None
-        try:
-            meta_data = self.ap.env_agent.ctrl._model_metadata_
-            action_space = meta_data.action_space
-            action = self.get_controller_action()
-            print("got action", action)
-            closest_action = self.find_closest_action_index(action, action_space)
-            print("closest_action", closest_action)
+        if self._phase == RunPhase.TRAIN:
+            try:
+                meta_data = self.ap.env_agent.ctrl._model_metadata_
+                action_space = meta_data.action_space
+                action = self.get_controller_action()
+                print("got action", action)
+                closest_action = self.find_closest_action_index(action, action_space)
+                print("closest_action", closest_action)
 
-        except Exception as e:
-            print(f"Error initializing game controller: {e}")
+            except Exception as e:
+                print(f"Error initializing game controller: {e}")
 
         if (
             self.phase == RunPhase.TRAIN
@@ -1245,8 +1247,9 @@ class Agent(AgentInterface):
                 action = self.choose_action(curr_state)
                 assert isinstance(action, ActionInfo)
         
-        action = ActionInfo(action=closest_action, all_action_probabilities=0,
-                 action_value=closest_action)
+        if closest_action: # If in training
+            action = ActionInfo(action=closest_action, all_action_probabilities=0,
+                    action_value=closest_action)
         
         print('Bare action before filtering: {}'.format(action))
         self.last_action_info = action
@@ -1257,14 +1260,7 @@ class Agent(AgentInterface):
         # can no longer use the transition in it's replay buffer. It is possible that these filters
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
-        print("filtered_action_info", filtered_action_info)
     
-        print("Action: {}".format(filtered_action_info.action))
-        print("Action value: {}".format(filtered_action_info.action))
-        print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
-        print("Action action_value: {}".format(filtered_action_info.action_value))
-        print("Action state_value: {}".format(filtered_action_info.state_value))
-        print("Action max_action_value: {}".format(filtered_action_info.max_action_value))
         return filtered_action_info
 
     def run_pre_network_filter_for_inference(
