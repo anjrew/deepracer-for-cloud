@@ -15,6 +15,7 @@
 #
 
 import copy
+import math
 import random
 from collections import OrderedDict
 from typing import Dict, List, Union, Tuple
@@ -1143,28 +1144,36 @@ class Agent(AgentInterface):
         Returns:
             dict: A dictionary representing the action with 'steering_angle' and 'speed' keys.
         """
-        print("Mapping x_axis", x_axis, "y_axis", y_axis)
         return {
             "steering_angle": self.map_steering(x_axis),
             "speed": self.map_acceleration(y_axis),
         }
 
     def map_steering(self, value: float) -> float:
-        print("Mapping steering value", value)
         # Mapping value from [-1, 1] to [30, -30]
         return 30 - (30 - (-30)) * (value - (-1)) / (1 - (-1))
 
 
     def map_acceleration(self, value: float) -> float:
-        print("Mapping acceleration value", value)
+        print("Mapping speed value", value)
         # Input range is now [0, 1] and output range is [0.1, 4]
         return 0.1 + (4 - 0.1) * (value - (-1)) / (1 - (-1))
 
+    def polar_to_cartesian(self, angle, magnitude):
+        """Convert polar coordinates to Cartesian coordinates."""
+        x = magnitude * math.cos(math.radians(angle))
+        y = magnitude * math.sin(math.radians(angle))
+        return x, y
+
     def euclidean_distance(self, action1, action2) -> float:
-        """Calculate the Euclidean distance between two actions."""
+        """Calculate the Euclidean distance between two actions represented in polar coordinates."""
         print("Getting Euclidean distance between", action1, "and", action2, "...")
-        steering_diff = action1["steering_angle"] - action2["steering_angle"]
-        acceleration_diff = action1["speed"] - action2["speed"]
+
+        x1, y1 = self.polar_to_cartesian(action1["steering_angle"], action1["speed"])
+        x2, y2 = self.polar_to_cartesian(action2["steering_angle"], action2["speed"])
+
+        steering_diff = x1 - x2
+        acceleration_diff = y1 - y2
         return (steering_diff**2 + acceleration_diff**2) ** 0.5
 
     def find_closest_action_index(self, target_action, action_list):
