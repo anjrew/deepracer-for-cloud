@@ -1283,8 +1283,10 @@ class Agent(AgentInterface):
                 action = self.choose_action(curr_state)
                 assert isinstance(action, ActionInfo)
         
+        action = ActionInfo(action=closest_action, all_action_probabilities=0,
+                 action_value=closest_action)
+        
         print('Bare action before filtering: {}'.format(action))
-        self.last_action_info = action
         self.last_action_info = action
 
         print('self.output_filter', self.output_filter)
@@ -1294,8 +1296,6 @@ class Agent(AgentInterface):
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
         print("filtered_action_info", filtered_action_info)
-        filtered_action_info = ActionInfo(action=closest_action, all_action_probabilities=0,
-                 action_value=closest_action)
     
         print("Action: {}".format(filtered_action_info.action))
         print("Action value: {}".format(filtered_action_info.action))
