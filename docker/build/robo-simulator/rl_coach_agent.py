@@ -1121,14 +1121,11 @@ class Agent(AgentInterface):
 
         if response.status_code == 200:
             obj = response.json()
-            print('Got object response', obj)
             x_axis = obj['left_stick_x_axis']
             y_axis = obj['right_trigger_axis']
             # Convert these axis values into an action
-            print("x_axis", x_axis)
-            print("y_axis", y_axis)
             action = self.convert_axes_to_action(x_axis, y_axis)
-            print("action", action)
+            print("Mapped action", action)
             return action
         else:
             Logger.error(f"Error getting controller input: {response.status_code}")
@@ -1155,7 +1152,6 @@ class Agent(AgentInterface):
 
 
     def map_acceleration(self, value: float) -> float:
-        print("Mapping speed value", value)
         # Input range is now [0, 1] and output range is [0.1, 4]
         return 0.1 + (4 - 0.1) * (value - (-1)) / (1 - (-1))
 
@@ -1167,8 +1163,6 @@ class Agent(AgentInterface):
 
     def euclidean_distance(self, action1, action2) -> float:
         """Calculate the Euclidean distance between two actions represented in polar coordinates."""
-        print("Getting Euclidean distance between", action1, "and", action2, "...")
-
         x1, y1 = self.polar_to_cartesian(action1["steering_angle"], action1["speed"])
         x2, y2 = self.polar_to_cartesian(action2["steering_angle"], action2["speed"])
 
@@ -1180,18 +1174,12 @@ class Agent(AgentInterface):
         """Find the index of the closest action to the target action in the action list."""
         closest_index = None
         min_distance = float("inf")
-        print("target_action", target_action)
-        print("action_list", action_list)
         for index, action in enumerate(action_list):
-            print("action", action, "index", index , "target_action", target_action)
             distance = self.euclidean_distance(target_action, action)
-            print("distance", distance)
             if distance < min_distance:
                 min_distance = distance
                 closest_index = index
-                print("closest_index", closest_index)
-            else:
-                print("distance", distance, "min_distance", min_distance)
+                print("closest_action_match", action ,closest_index)
 
         return closest_index
 
@@ -1204,52 +1192,15 @@ class Agent(AgentInterface):
         :return: An ActionInfo object, which contains the action and any additional info from the action decision process
         """
 
-        print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<")
+        print("Current Phase", self._phase)
         closest_action = None
         try:
             meta_data = self.ap.env_agent.ctrl._model_metadata_
             action_space = meta_data.action_space
-            action_space_type = meta_data.action_space_type
-            print("action_space", action_space)
-            print("action_space_type", action_space_type)
             action = self.get_controller_action()
             print("got action", action)
             closest_action = self.find_closest_action_index(action, action_space)
             print("closest_action", closest_action)
-
-            # for attr in dir(meta_data):
-            #     # Filter out special methods and properties
-            #     if not attr.startswith("__"):
-            #         # Get the value of each attribute
-            #         value = getattr(meta_data, attr)
-            #         print("-----------------")
-            #         print(f"{attr}: {value}")
-
-            # # for attr in dir(self.ap):
-            # #     # Filter out special methods and properties
-            # #     if not attr.startswith("__"):
-            # #         # Get the value of each attribute
-            # #         value = getattr(self.ap, attr)
-            # #         print("-----------------")
-            # #         print(f"{attr}: {value}")
-
-            # #         if attr == 'env_agent':
-            # #             env_obj = value
-
-            # #             for env_obj_attr in dir(env_obj):
-            # #                 if not env_obj_attr.startswith("__"):
-
-            # #                     env_obj_attr_value = getattr(env_obj, env_obj_attr)
-            # #                     print("-----------------")
-            # #                     print(f"{env_obj_attr}: {env_obj_attr_value}")
-
-            # #                     if env_obj_attr == 'ctrl':
-            # #                         ctrl_obj = env_obj_attr_value
-            # #                         for ctrl_obj_attr in dir(ctrl_obj):
-            # #                             if not ctrl_obj_attr.startswith("__"):
-            # #                                 ctrl_obj_attr_value = getattr(ctrl_obj, ctrl_obj_attr)
-            # #                                 print("-----------------")
-            # #                                 print(f"{ctrl_obj_attr}: {ctrl_obj_attr_value}")
 
         except Exception as e:
             print(f"Error initializing game controller: {e}")
