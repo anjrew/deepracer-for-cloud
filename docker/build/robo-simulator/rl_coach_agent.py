@@ -854,7 +854,6 @@ class Agent(AgentInterface):
             return action
         else:
             Logger.error(f"Error getting controller input: {response.status_code}")
-
     def convert_axes_to_action(self, x_axis, y_axis):
         """
         Converts the x and y axes values to a dictionary representing the action.
@@ -866,8 +865,15 @@ class Agent(AgentInterface):
         Returns:
             dict: A dictionary representing the action with 'steering_angle' and 'speed' keys.
         """
+        DEAD_ZONE = 0.1  # Adjust the dead zone threshold as needed
+         # Apply dead zone for steering
+        if abs(x_axis) < DEAD_ZONE:
+            steering_angle = 0  # Center the steering
+        else:
+            steering_angle = self.map_steering(x_axis)
+
         return {
-            "steering_angle": self.map_steering(x_axis),
+            "steering_angle": steering_angle,
             "speed": self.map_acceleration(y_axis),
         }
 
