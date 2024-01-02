@@ -20,17 +20,48 @@ from collections import OrderedDict
 from typing import Dict, List, Union, Tuple
 
 import numpy as np
+import requests
 from six.moves import range
+import pygame
 
 from rl_coach.agents.agent_interface import AgentInterface
 from rl_coach.architectures.network_wrapper import NetworkWrapper
-from rl_coach.base_parameters import AgentParameters, Device, DeviceType, DistributedTaskParameters, Frameworks
-from rl_coach.core_types import RunPhase, PredictionType, EnvironmentEpisodes, ActionType, Batch, Episode, StateType
-from rl_coach.core_types import Transition, ActionInfo, TrainingSteps, EnvironmentSteps, EnvResponse
+from rl_coach.base_parameters import (
+    AgentParameters,
+    Device,
+    DeviceType,
+    DistributedTaskParameters,
+    Frameworks,
+)
+from rl_coach.core_types import (
+    RunPhase,
+    PredictionType,
+    EnvironmentEpisodes,
+    ActionType,
+    Batch,
+    Episode,
+    StateType,
+)
+from rl_coach.core_types import (
+    Transition,
+    ActionInfo,
+    TrainingSteps,
+    EnvironmentSteps,
+    EnvResponse,
+)
 from rl_coach.logger import screen, Logger, EpisodeLogger
-from rl_coach.memories.episodic.episodic_experience_replay import EpisodicExperienceReplay
+from rl_coach.memories.memory import Memory
+from rl_coach.memories.non_episodic.experience_replay import ExperienceReplay
+from rl_coach.memories.episodic.episodic_experience_replay import (
+    EpisodicExperienceReplay,
+)
 from rl_coach.saver import SaverCollection
-from rl_coach.spaces import SpacesDefinition, VectorObservationSpace, GoalsSpace, AttentionActionSpace
+from rl_coach.spaces import (
+    SpacesDefinition,
+    VectorObservationSpace,
+    GoalsSpace,
+    AttentionActionSpace,
+)
 from rl_coach.utils import Signal, force_list
 from rl_coach.utils import dynamic_import_and_instantiate_module_from_params
 from rl_coach.memories.backend.memory_impl import get_memory_backend
@@ -40,11 +71,16 @@ from rl_coach.core_types import PickledReplayBuffer, CsvDataset
 
 
 class Agent(AgentInterface):
-    def __init__(self, agent_parameters: AgentParameters, parent: Union['LevelManager', 'CompositeAgent']=None):
+    def __init__(
+        self,
+        agent_parameters: AgentParameters,
+        parent: Union["LevelManager", "CompositeAgent"] = None,
+    ):
         """
         :param agent_parameters: A AgentParameters class instance with all the agent parameters
         """
         super().__init__()
+
         # use seed
         if agent_parameters.task_parameters.seed is not None:
             random.seed(agent_parameters.task_parameters.seed)
@@ -57,49 +93,71 @@ class Agent(AgentInterface):
         self.ap = agent_parameters
         self.task_id = self.ap.task_parameters.task_index
         self.is_chief = self.task_id == 0
-        self.shared_memory = type(agent_parameters.task_parameters) == DistributedTaskParameters \
-                             and self.ap.memory.shared_memory
+        self.shared_memory = (
+            type(agent_parameters.task_parameters) == DistributedTaskParameters
+            and self.ap.memory.shared_memory
+        )
         if self.shared_memory:
-            self.shared_memory_scratchpad = self.ap.task_parameters.shared_memory_scratchpad
+            self.shared_memory_scratchpad = (
+                self.ap.task_parameters.shared_memory_scratchpad
+            )
         self.parent = parent
         self.parent_level_manager = None
         # TODO this needs to be sorted out. Why the duplicates for the agent's name?
-        self.full_name_id = agent_parameters.full_name_id = self.name = agent_parameters.name
+        self.full_name_id = (
+            agent_parameters.full_name_id
+        ) = self.name = agent_parameters.name
 
         if type(agent_parameters.task_parameters) == DistributedTaskParameters:
-            screen.log_title("Creating agent - name: {} task id: {} (may take up to 30 seconds due to "
-                             "tensorflow wake up time)".format(self.full_name_id, self.task_id))
+            screen.log_title(
+                "Creating agent - name: {} task id: {} (may take up to 30 seconds due to "
+                "tensorflow wake up time)".format(self.full_name_id, self.task_id)
+            )
         else:
             screen.log_title("Creating agent - name: {}".format(self.full_name_id))
         self.imitation = False
         self.agent_logger = Logger()
         self.agent_episode_logger = EpisodeLogger()
-
+        print("[RL] Created agent loggers")
         # get the memory
         # - distributed training + shared memory:
         #   * is chief?  -> create the memory and add it to the scratchpad
         #   * not chief? -> wait for the chief to create the memory and then fetch it
         # - non distributed training / not shared memory:
         #   * create memory
-        memory_name = self.ap.memory.path.split(':')[1]
-        self.memory_lookup_name = self.full_name_id + '.' + memory_name
+        memory_name = self.ap.memory.path.split(":")[1]
+        self.memory_lookup_name = self.full_name_id + "." + memory_name
         if self.shared_memory and not self.is_chief:
+            print("[RL] Creating shared memory")
             self.memory = self.shared_memory_scratchpad.get(self.memory_lookup_name)
         else:
+            print("[RL] Dynamic import of memory: ", self.ap.memory)
             # modules
-            self.memory = dynamic_import_and_instantiate_module_from_params(self.ap.memory)
+            self.memory = dynamic_import_and_instantiate_module_from_params(
+                self.ap.memory
+            )
+            print("[RL] Dynamically imported of memory", self.memory)
 
-            if hasattr(self.ap.memory, 'memory_backend_params'):
-                self.memory_backend = get_memory_backend(self.ap.memory.memory_backend_params)
+            if hasattr(self.ap.memory, "memory_backend_params"):
+                print(
+                    "[RL] Getting memory backend", self.ap.memory.memory_backend_params
+                )
+                self.memory_backend = get_memory_backend(
+                    self.ap.memory.memory_backend_params
+                )
+                print("[RL] Memory backend", self.memory_backend)
 
-                if self.ap.memory.memory_backend_params.run_type != 'trainer':
+                if self.ap.memory.memory_backend_params.run_type != "trainer":
+                    print("[RL] Setting memory backend", self.memory_backend)
                     self.memory.set_memory_backend(self.memory_backend)
 
             if self.shared_memory and self.is_chief:
+                print("[RL] Shared memory scratchpad")
                 self.shared_memory_scratchpad.add(self.memory_lookup_name, self.memory)
 
         # set devices
         if type(agent_parameters.task_parameters) == DistributedTaskParameters:
+            print("[RL] Setting distributed devices")
             self.has_global = True
             self.replicated_device = agent_parameters.task_parameters.device
             self.worker_device = "/job:worker/task:{}".format(self.task_id)
@@ -108,23 +166,28 @@ class Agent(AgentInterface):
             else:
                 self.worker_device += "/device:GPU:0"
         else:
+            print("[RL] Setting devices")
             self.has_global = False
             self.replicated_device = None
             if agent_parameters.task_parameters.use_cpu:
                 self.worker_device = Device(DeviceType.CPU)
             else:
-                self.worker_device = [Device(DeviceType.GPU, i)
-                                      for i in range(agent_parameters.task_parameters.num_gpu)]
-
+                self.worker_device = [
+                    Device(DeviceType.GPU, i)
+                    for i in range(agent_parameters.task_parameters.num_gpu)
+                ]
+        print("[RL] Setting filters")
         # filters
         self.input_filter = self.ap.input_filter
-        self.input_filter.set_name('input_filter')
+        self.input_filter.set_name("input_filter")
         self.output_filter = self.ap.output_filter
-        self.output_filter.set_name('output_filter')
+        self.output_filter.set_name("output_filter")
         self.pre_network_filter = self.ap.pre_network_filter
-        self.pre_network_filter.set_name('pre_network_filter')
+        self.pre_network_filter.set_name("pre_network_filter")
 
-        device = self.replicated_device if self.replicated_device else self.worker_device
+        device = (
+            self.replicated_device if self.replicated_device else self.worker_device
+        )
 
         # TODO-REMOVE This is a temporary flow dividing to 3 modes. To be converged to a single flow once distributed tf
         #  is removed, and Redis is used for sharing data between local workers.
@@ -133,22 +196,44 @@ class Agent(AgentInterface):
         # 2. Distributed TF (=distributed on a single node, using distributed TF) - TF for both data sharing and arithmetic backend
         # 3. Single worker (=both TF and Mxnet) - no data sharing needed + numpy arithmetic backend
 
-        if hasattr(self.ap.memory, 'memory_backend_params') and self.ap.algorithm.distributed_coach_synchronization_type:
-            self.input_filter.set_device(device, memory_backend_params=self.ap.memory.memory_backend_params, mode='numpy')
-            self.output_filter.set_device(device, memory_backend_params=self.ap.memory.memory_backend_params, mode='numpy')
-            self.pre_network_filter.set_device(device, memory_backend_params=self.ap.memory.memory_backend_params, mode='numpy')
-        elif (type(agent_parameters.task_parameters) == DistributedTaskParameters and
-              agent_parameters.task_parameters.framework_type == Frameworks.tensorflow):
-            self.input_filter.set_device(device, mode='tf')
-            self.output_filter.set_device(device, mode='tf')
-            self.pre_network_filter.set_device(device, mode='tf')
+        if (
+            hasattr(self.ap.memory, "memory_backend_params")
+            and self.ap.algorithm.distributed_coach_synchronization_type
+        ):
+            print("[RL] Setting filter devices: distributed")
+            self.input_filter.set_device(
+                device,
+                memory_backend_params=self.ap.memory.memory_backend_params,
+                mode="numpy",
+            )
+            self.output_filter.set_device(
+                device,
+                memory_backend_params=self.ap.memory.memory_backend_params,
+                mode="numpy",
+            )
+            self.pre_network_filter.set_device(
+                device,
+                memory_backend_params=self.ap.memory.memory_backend_params,
+                mode="numpy",
+            )
+        elif (
+            type(agent_parameters.task_parameters) == DistributedTaskParameters
+            and agent_parameters.task_parameters.framework_type == Frameworks.tensorflow
+        ):
+            print("[RL] Setting filter devices: tf")
+            self.input_filter.set_device(device, mode="tf")
+            self.output_filter.set_device(device, mode="tf")
+            self.pre_network_filter.set_device(device, mode="tf")
         else:
-            self.input_filter.set_device(device, mode='numpy')
-            self.output_filter.set_device(device, mode='numpy')
-            self.pre_network_filter.set_device(device, mode='numpy')
+            print("[RL] Setting filter devices: numpy")
+            self.input_filter.set_device(device, mode="numpy")
+            self.output_filter.set_device(device, mode="numpy")
+            self.pre_network_filter.set_device(device, mode="numpy")
 
         # initialize all internal variables
+        print("[RL] Setting Phase")
         self._phase = RunPhase.HEATUP
+        print("[RL] After setting Phase")
         self.total_shaped_reward_in_current_episode = 0
         self.total_reward_in_current_episode = 0
         self.total_steps_counter = 0
@@ -174,30 +259,41 @@ class Agent(AgentInterface):
         self.accumulated_shaped_rewards_across_evaluation_episodes = 0
         self.num_successes_across_evaluation_episodes = 0
         self.num_evaluation_episodes_completed = 0
-        self.current_episode_buffer = Episode(discount=self.ap.algorithm.discount, n_step=self.ap.algorithm.n_step)
+        self.current_episode_buffer = Episode(
+            discount=self.ap.algorithm.discount, n_step=self.ap.algorithm.n_step
+        )
         # TODO: add agents observation rendering for debugging purposes (not the same as the environment rendering)
 
         # environment parameters
         self.spaces = None
         self.in_action_space = self.ap.algorithm.in_action_space
-
+        print("[RL] Setting signals")
         # signals
         self.episode_signals = []
         self.step_signals = []
-        self.loss = self.register_signal('Loss')
-        self.curr_learning_rate = self.register_signal('Learning Rate')
-        self.unclipped_grads = self.register_signal('Grads (unclipped)')
-        self.reward = self.register_signal('Reward', dump_one_value_per_episode=False, dump_one_value_per_step=True)
-        self.shaped_reward = self.register_signal('Shaped Reward', dump_one_value_per_episode=False, dump_one_value_per_step=True)
-        self.discounted_return = self.register_signal('Discounted Return')
+        self.loss = self.register_signal("Loss")
+        self.curr_learning_rate = self.register_signal("Learning Rate")
+        self.unclipped_grads = self.register_signal("Grads (unclipped)")
+        self.reward = self.register_signal(
+            "Reward", dump_one_value_per_episode=False, dump_one_value_per_step=True
+        )
+        self.shaped_reward = self.register_signal(
+            "Shaped Reward",
+            dump_one_value_per_episode=False,
+            dump_one_value_per_step=True,
+        )
+        self.discounted_return = self.register_signal("Discounted Return")
         if isinstance(self.in_action_space, GoalsSpace):
-            self.distance_from_goal = self.register_signal('Distance From Goal', dump_one_value_per_step=True)
+            self.distance_from_goal = self.register_signal(
+                "Distance From Goal", dump_one_value_per_step=True
+            )
 
         # batch rl
         self.ope_manager = OpeManager() if self.ap.is_batch_rl_training else None
+        print("[RL] Agent init successful")
 
     @property
-    def parent(self) -> 'LevelManager':
+    def parent(self) -> "LevelManager":
         """
         Get the parent class of the agent
 
@@ -216,9 +312,11 @@ class Agent(AgentInterface):
         """
         self._parent = val
         if self._parent is not None:
-            if not hasattr(self._parent, 'name'):
+            if not hasattr(self._parent, "name"):
                 raise ValueError("The parent of an agent must have a name")
-            self.full_name_id = self.ap.full_name_id = "{}/{}".format(self._parent.name, self.name)
+            self.full_name_id = self.ap.full_name_id = "{}/{}".format(
+                self._parent.name, self.name
+            )
 
     def setup_logger(self) -> None:
         """
@@ -227,17 +325,27 @@ class Agent(AgentInterface):
         :return: None
         """
         # dump documentation
-        logger_prefix = "{graph_name}.{level_name}.{agent_full_id}".\
-            format(graph_name=self.parent_level_manager.parent_graph_manager.name,
-                   level_name=self.parent_level_manager.name,
-                   agent_full_id='.'.join(self.full_name_id.split('/')))
-        self.agent_logger.set_index_name(self.parent_level_manager.parent_graph_manager.time_metric.value.name)
-        self.agent_logger.set_logger_filenames(self.ap.task_parameters.experiment_path, logger_prefix=logger_prefix,
-                                               add_timestamp=True, task_id=self.task_id)
+        logger_prefix = "{graph_name}.{level_name}.{agent_full_id}".format(
+            graph_name=self.parent_level_manager.parent_graph_manager.name,
+            level_name=self.parent_level_manager.name,
+            agent_full_id=".".join(self.full_name_id.split("/")),
+        )
+        self.agent_logger.set_index_name(
+            self.parent_level_manager.parent_graph_manager.time_metric.value.name
+        )
+        self.agent_logger.set_logger_filenames(
+            self.ap.task_parameters.experiment_path,
+            logger_prefix=logger_prefix,
+            add_timestamp=True,
+            task_id=self.task_id,
+        )
         if self.ap.visualization.dump_in_episode_signals:
-            self.agent_episode_logger.set_logger_filenames(self.ap.task_parameters.experiment_path,
-                                                           logger_prefix=logger_prefix,
-                                                           add_timestamp=True, task_id=self.task_id)
+            self.agent_episode_logger.set_logger_filenames(
+                self.ap.task_parameters.experiment_path,
+                logger_prefix=logger_prefix,
+                add_timestamp=True,
+                task_id=self.task_id,
+            )
 
     def set_session(self, sess) -> None:
         """
@@ -257,6 +365,7 @@ class Agent(AgentInterface):
 
         :return: None
         """
+
         # Loading a memory from a CSV file, requires an input filter to filter through the data.
         # The filter needs a session before it can be used.
         if self.ap.memory.load_memory_from_file_path:
@@ -270,19 +379,34 @@ class Agent(AgentInterface):
         """
 
         if isinstance(self.ap.memory.load_memory_from_file_path, PickledReplayBuffer):
-            screen.log_title("Loading a pickled replay buffer. Pickled file path: {}"
-                             .format(self.ap.memory.load_memory_from_file_path.filepath))
+            screen.log_title(
+                "Loading a pickled replay buffer. Pickled file path: {}".format(
+                    self.ap.memory.load_memory_from_file_path.filepath
+                )
+            )
             self.memory.load_pickled(self.ap.memory.load_memory_from_file_path.filepath)
         elif isinstance(self.ap.memory.load_memory_from_file_path, CsvDataset):
-            screen.log_title("Loading a replay buffer from a CSV file. CSV file path: {}"
-                             .format(self.ap.memory.load_memory_from_file_path.filepath))
-            self.memory.load_csv(self.ap.memory.load_memory_from_file_path, self.input_filter)
+            screen.log_title(
+                "Loading a replay buffer from a CSV file. CSV file path: {}".format(
+                    self.ap.memory.load_memory_from_file_path.filepath
+                )
+            )
+            self.memory.load_csv(
+                self.ap.memory.load_memory_from_file_path, self.input_filter
+            )
         else:
-            raise ValueError('Trying to load a replay buffer using an unsupported method - {}. '
-                             .format(self.ap.memory.load_memory_from_file_path))
+            raise ValueError(
+                "Trying to load a replay buffer using an unsupported method - {}. ".format(
+                    self.ap.memory.load_memory_from_file_path
+                )
+            )
 
-    def register_signal(self, signal_name: str, dump_one_value_per_episode: bool=True,
-                        dump_one_value_per_step: bool=False) -> Signal:
+    def register_signal(
+        self,
+        signal_name: str,
+        dump_one_value_per_episode: bool = True,
+        dump_one_value_per_step: bool = False,
+    ) -> Signal:
         """
         Register a signal such that its statistics will be dumped and be viewable through dashboard
 
@@ -309,27 +433,40 @@ class Agent(AgentInterface):
         self.spaces = copy.deepcopy(spaces)
 
         if self.ap.algorithm.use_accumulated_reward_as_measurement:
-            if 'measurements' in self.spaces.state.sub_spaces:
-                self.spaces.state['measurements'].shape += 1
-                self.spaces.state['measurements'].measurements_names += ['accumulated_reward']
+            if "measurements" in self.spaces.state.sub_spaces:
+                self.spaces.state["measurements"].shape += 1
+                self.spaces.state["measurements"].measurements_names += [
+                    "accumulated_reward"
+                ]
             else:
-                self.spaces.state['measurements'] = VectorObservationSpace(1, measurements_names=['accumulated_reward'])
+                self.spaces.state["measurements"] = VectorObservationSpace(
+                    1, measurements_names=["accumulated_reward"]
+                )
 
         for observation_name in self.spaces.state.sub_spaces.keys():
-            self.spaces.state[observation_name] = \
-                self.pre_network_filter.get_filtered_observation_space(observation_name,
-                    self.input_filter.get_filtered_observation_space(observation_name,
-                                                                     self.spaces.state[observation_name]))
+            self.spaces.state[
+                observation_name
+            ] = self.pre_network_filter.get_filtered_observation_space(
+                observation_name,
+                self.input_filter.get_filtered_observation_space(
+                    observation_name, self.spaces.state[observation_name]
+                ),
+            )
 
         self.spaces.reward = self.pre_network_filter.get_filtered_reward_space(
-            self.input_filter.get_filtered_reward_space(self.spaces.reward))
+            self.input_filter.get_filtered_reward_space(self.spaces.reward)
+        )
 
-        self.spaces.action = self.output_filter.get_unfiltered_action_space(self.spaces.action)
+        self.spaces.action = self.output_filter.get_unfiltered_action_space(
+            self.spaces.action
+        )
 
         if isinstance(self.in_action_space, GoalsSpace):
             # TODO: what if the goal type is an embedding / embedding change?
             self.spaces.goal = self.in_action_space
-            self.spaces.goal.set_target_space(self.spaces.state[self.spaces.goal.goal_name])
+            self.spaces.goal.set_target_space(
+                self.spaces.state[self.spaces.goal.goal_name]
+            )
 
         self.init_environment_dependent_modules()
 
@@ -343,16 +480,18 @@ class Agent(AgentInterface):
         """
         networks = {}
         for network_name in sorted(self.ap.network_wrappers.keys()):
-            networks[network_name] = NetworkWrapper(name=network_name,
-                                                    agent_parameters=self.ap,
-                                                    has_target=self.ap.network_wrappers[network_name].create_target_network,
-                                                    has_global=self.has_global,
-                                                    spaces=self.spaces,
-                                                    replicated_device=self.replicated_device,
-                                                    worker_device=self.worker_device)
+            networks[network_name] = NetworkWrapper(
+                name=network_name,
+                agent_parameters=self.ap,
+                has_target=self.ap.network_wrappers[network_name].create_target_network,
+                has_global=self.has_global,
+                spaces=self.spaces,
+                replicated_device=self.replicated_device,
+                worker_device=self.worker_device,
+            )
 
             if self.ap.visualization.print_networks_summary:
-                screen.print(networks[network_name])
+                print(networks[network_name])
 
         return networks
 
@@ -368,12 +507,17 @@ class Agent(AgentInterface):
             if self.spaces.action.__class__ in self.ap.exploration.keys():
                 self.ap.exploration = self.ap.exploration[self.spaces.action.__class__]
             else:
-                raise ValueError("The exploration parameters were defined as a mapping between action space types and "
-                                 "exploration types, but the action space used by the environment ({}) was not part of "
-                                 "the exploration parameters dictionary keys ({})"
-                                 .format(self.spaces.action.__class__, list(self.ap.exploration.keys())))
+                raise ValueError(
+                    "The exploration parameters were defined as a mapping between action space types and "
+                    "exploration types, but the action space used by the environment ({}) was not part of "
+                    "the exploration parameters dictionary keys ({})".format(
+                        self.spaces.action.__class__, list(self.ap.exploration.keys())
+                    )
+                )
         self.ap.exploration.action_space = self.spaces.action
-        self.exploration_policy = dynamic_import_and_instantiate_module_from_params(self.ap.exploration)
+        self.exploration_policy = dynamic_import_and_instantiate_module_from_params(
+            self.ap.exploration
+        )
 
         # create all the networks of the agent
         self.networks = self.create_networks()
@@ -408,8 +552,8 @@ class Agent(AgentInterface):
         :param val: The new phase to change to
         :return: None
         """
-        starting_evaluation = (val == RunPhase.TEST)
-        ending_evaluation = (self.phase == RunPhase.TEST)
+        starting_evaluation = val == RunPhase.TEST
+        ending_evaluation = self.phase == RunPhase.TEST
 
         if starting_evaluation:
             self.accumulated_rewards_across_evaluation_episodes = 0
@@ -417,34 +561,44 @@ class Agent(AgentInterface):
             self.num_successes_across_evaluation_episodes = 0
             self.num_evaluation_episodes_completed = 0
 
-            if self.ap.task_parameters.evaluate_only is None:
-                # TODO verbosity was mistakenly removed from task_parameters on release 0.11.0, need to bring it back
-                # if self.ap.is_a_highest_level_agent or self.ap.task_parameters.verbosity == "high":
-                if self.ap.is_a_highest_level_agent:
-                    screen.log_title("{}: Starting evaluation phase".format(self.name))
+            # TODO verbosity was mistakenly removed from task_parameters on release 0.11.0, need to bring it back
+            # if self.ap.is_a_highest_level_agent or self.ap.task_parameters.verbosity == "high":
+            if self.ap.is_a_highest_level_agent:
+                screen.log_title("{}: Starting evaluation phase".format(self.name))
 
         elif ending_evaluation:
             # we write to the next episode, because it could be that the current episode was already written
             # to disk and then we won't write it again
             self.agent_logger.set_current_time(self.get_current_time() + 1)
 
-            evaluation_reward = self.accumulated_rewards_across_evaluation_episodes / self.num_evaluation_episodes_completed
+            evaluation_reward = (
+                self.accumulated_rewards_across_evaluation_episodes
+                / self.num_evaluation_episodes_completed
+            )
             self.agent_logger.create_signal_value(
-                'Evaluation Reward', evaluation_reward)
+                "Evaluation Reward", evaluation_reward
+            )
             self.agent_logger.create_signal_value(
-                'Shaped Evaluation Reward',
-                self.accumulated_shaped_rewards_across_evaluation_episodes / self.num_evaluation_episodes_completed)
-            success_rate = self.num_successes_across_evaluation_episodes / self.num_evaluation_episodes_completed
-            self.agent_logger.create_signal_value(
-                "Success Rate",
-                success_rate)
+                "Shaped Evaluation Reward",
+                self.accumulated_shaped_rewards_across_evaluation_episodes
+                / self.num_evaluation_episodes_completed,
+            )
+            success_rate = (
+                self.num_successes_across_evaluation_episodes
+                / self.num_evaluation_episodes_completed
+            )
+            self.agent_logger.create_signal_value("Success Rate", success_rate)
 
-            if self.ap.task_parameters.evaluate_only is None:
-                # TODO verbosity was mistakenly removed from task_parameters on release 0.11.0, need to bring it back
-                # if self.ap.is_a_highest_level_agent or self.ap.task_parameters.verbosity == "high":
-                if self.ap.is_a_highest_level_agent:
-                    screen.log_title("{}: Finished evaluation phase. Success rate = {}, Avg Total Reward = {}"
-                                     .format(self.name, np.round(success_rate, 2), np.round(evaluation_reward, 2)))
+            # TODO verbosity was mistakenly removed from task_parameters on release 0.11.0, need to bring it back
+            # if self.ap.is_a_highest_level_agent or self.ap.task_parameters.verbosity == "high":
+            if self.ap.is_a_highest_level_agent:
+                screen.log_title(
+                    "{}: Finished evaluation phase. Success rate = {}, Avg Total Reward = {}".format(
+                        self.name,
+                        np.round(success_rate, 2),
+                        np.round(evaluation_reward, 2),
+                    )
+                )
 
     def call_memory(self, func, args=()):
         """
@@ -457,7 +611,9 @@ class Agent(AgentInterface):
         :return: the return value of the function
         """
         if self.shared_memory:
-            result = self.shared_memory_scratchpad.internal_call(self.memory_lookup_name, func, args)
+            result = self.shared_memory_scratchpad.internal_call(
+                self.memory_lookup_name, func, args
+            )
         else:
             if type(args) != tuple:
                 args = (args,)
@@ -490,18 +646,38 @@ class Agent(AgentInterface):
         """
         # log all the signals to file
         self.agent_episode_logger.set_current_time(self.current_episode_steps_counter)
-        self.agent_episode_logger.create_signal_value('Training Iter', self.training_iteration)
-        self.agent_episode_logger.create_signal_value('In Heatup', int(self._phase == RunPhase.HEATUP))
-        self.agent_episode_logger.create_signal_value('ER #Transitions', self.call_memory('num_transitions'))
-        self.agent_episode_logger.create_signal_value('ER #Episodes', self.call_memory('length'))
-        self.agent_episode_logger.create_signal_value('Total steps', self.total_steps_counter)
-        self.agent_episode_logger.create_signal_value("Epsilon", self.exploration_policy.get_control_param())
-        self.agent_episode_logger.create_signal_value("Shaped Accumulated Reward", self.total_shaped_reward_in_current_episode)
-        self.agent_episode_logger.create_signal_value('Update Target Network', 0, overwrite=False)
-        self.agent_episode_logger.update_wall_clock_time(self.current_episode_steps_counter)
+        self.agent_episode_logger.create_signal_value(
+            "Training Iter", self.training_iteration
+        )
+        self.agent_episode_logger.create_signal_value(
+            "In Heatup", int(self._phase == RunPhase.HEATUP)
+        )
+        self.agent_episode_logger.create_signal_value(
+            "ER #Transitions", self.call_memory("num_transitions")
+        )
+        self.agent_episode_logger.create_signal_value(
+            "ER #Episodes", self.call_memory("length")
+        )
+        self.agent_episode_logger.create_signal_value(
+            "Total steps", self.total_steps_counter
+        )
+        self.agent_episode_logger.create_signal_value(
+            "Epsilon", self.exploration_policy.get_control_param()
+        )
+        self.agent_episode_logger.create_signal_value(
+            "Shaped Accumulated Reward", self.total_shaped_reward_in_current_episode
+        )
+        self.agent_episode_logger.create_signal_value(
+            "Update Target Network", 0, overwrite=False
+        )
+        self.agent_episode_logger.update_wall_clock_time(
+            self.current_episode_steps_counter
+        )
 
         for signal in self.step_signals:
-            self.agent_episode_logger.create_signal_value(signal.name, signal.get_last_value())
+            self.agent_episode_logger.create_signal_value(
+                signal.name, signal.get_last_value()
+            )
 
         # dump
         self.agent_episode_logger.dump_output_csv()
@@ -517,42 +693,86 @@ class Agent(AgentInterface):
         # log all the signals to file
         current_time = self.get_current_time()
         self.agent_logger.set_current_time(current_time)
-        self.agent_logger.create_signal_value('Training Iter', self.training_iteration)
-        self.agent_logger.create_signal_value('Episode #', self.current_episode)
-        self.agent_logger.create_signal_value('Epoch', self.training_epoch)
-        self.agent_logger.create_signal_value('In Heatup', int(self._phase == RunPhase.HEATUP))
-        self.agent_logger.create_signal_value('ER #Transitions', self.call_memory('num_transitions'))
-        self.agent_logger.create_signal_value('ER #Episodes', self.call_memory('length'))
-        self.agent_logger.create_signal_value('Episode Length', self.current_episode_steps_counter)
-        self.agent_logger.create_signal_value('Total steps', self.total_steps_counter)
-        self.agent_logger.create_signal_value("Epsilon", np.mean(self.exploration_policy.get_control_param()))
-        self.agent_logger.create_signal_value("Shaped Training Reward", self.total_shaped_reward_in_current_episode
-                                   if self._phase == RunPhase.TRAIN else np.nan)
-        self.agent_logger.create_signal_value("Training Reward", self.total_reward_in_current_episode
-                                   if self._phase == RunPhase.TRAIN else np.nan)
+        self.agent_logger.create_signal_value("Training Iter", self.training_iteration)
+        self.agent_logger.create_signal_value("Episode #", self.current_episode)
+        self.agent_logger.create_signal_value("Epoch", self.training_epoch)
+        self.agent_logger.create_signal_value(
+            "In Heatup", int(self._phase == RunPhase.HEATUP)
+        )
+        self.agent_logger.create_signal_value(
+            "ER #Transitions", self.call_memory("num_transitions")
+        )
+        self.agent_logger.create_signal_value(
+            "ER #Episodes", self.call_memory("length")
+        )
+        self.agent_logger.create_signal_value(
+            "Episode Length", self.current_episode_steps_counter
+        )
+        self.agent_logger.create_signal_value("Total steps", self.total_steps_counter)
+        self.agent_logger.create_signal_value(
+            "Epsilon", np.mean(self.exploration_policy.get_control_param())
+        )
+        self.agent_logger.create_signal_value(
+            "Shaped Training Reward",
+            self.total_shaped_reward_in_current_episode
+            if self._phase == RunPhase.TRAIN
+            else np.nan,
+        )
+        self.agent_logger.create_signal_value(
+            "Training Reward",
+            self.total_reward_in_current_episode
+            if self._phase == RunPhase.TRAIN
+            else np.nan,
+        )
 
-        self.agent_logger.create_signal_value('Update Target Network', 0, overwrite=False)
+        self.agent_logger.create_signal_value(
+            "Update Target Network", 0, overwrite=False
+        )
         self.agent_logger.update_wall_clock_time(current_time)
 
         # The following signals are created with meaningful values only when an evaluation phase is completed.
         # Creating with default NaNs for any HEATUP/TRAIN/TEST episode which is not the last in an evaluation phase
-        self.agent_logger.create_signal_value('Evaluation Reward', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Shaped Evaluation Reward', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Success Rate', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Inverse Propensity Score', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Direct Method Reward', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Doubly Robust', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Weighted Importance Sampling', np.nan, overwrite=False)
-        self.agent_logger.create_signal_value('Sequential Doubly Robust', np.nan, overwrite=False)
+        self.agent_logger.create_signal_value(
+            "Evaluation Reward", np.nan, overwrite=False
+        )
+        self.agent_logger.create_signal_value(
+            "Shaped Evaluation Reward", np.nan, overwrite=False
+        )
+        self.agent_logger.create_signal_value("Success Rate", np.nan, overwrite=False)
+        self.agent_logger.create_signal_value(
+            "Inverse Propensity Score", np.nan, overwrite=False
+        )
+        self.agent_logger.create_signal_value(
+            "Direct Method Reward", np.nan, overwrite=False
+        )
+        self.agent_logger.create_signal_value("Doubly Robust", np.nan, overwrite=False)
+        self.agent_logger.create_signal_value(
+            "Weighted Importance Sampling", np.nan, overwrite=False
+        )
+        self.agent_logger.create_signal_value(
+            "Sequential Doubly Robust", np.nan, overwrite=False
+        )
 
         for signal in self.episode_signals:
-            self.agent_logger.create_signal_value("{}/Mean".format(signal.name), signal.get_mean())
-            self.agent_logger.create_signal_value("{}/Stdev".format(signal.name), signal.get_stdev())
-            self.agent_logger.create_signal_value("{}/Max".format(signal.name), signal.get_max())
-            self.agent_logger.create_signal_value("{}/Min".format(signal.name), signal.get_min())
+            self.agent_logger.create_signal_value(
+                "{}/Mean".format(signal.name), signal.get_mean()
+            )
+            self.agent_logger.create_signal_value(
+                "{}/Stdev".format(signal.name), signal.get_stdev()
+            )
+            self.agent_logger.create_signal_value(
+                "{}/Max".format(signal.name), signal.get_max()
+            )
+            self.agent_logger.create_signal_value(
+                "{}/Min".format(signal.name), signal.get_min()
+            )
 
         # dump
-        if self.current_episode % self.ap.visualization.dump_signals_to_csv_every_x_episodes == 0:
+        if (
+            self.current_episode
+            % self.ap.visualization.dump_signals_to_csv_every_x_episodes
+            == 0
+        ):
             self.agent_logger.dump_output_csv()
 
     def handle_episode_ended(self) -> None:
@@ -569,30 +789,40 @@ class Agent(AgentInterface):
         for transition in self.current_episode_buffer.transitions:
             self.discounted_return.add_sample(transition.n_step_discounted_rewards)
 
-        if self.phase != RunPhase.TEST or self.ap.task_parameters.evaluate_only is not None:
+        if self.phase != RunPhase.TEST or self.ap.task_parameters.evaluate_only:
             self.current_episode += 1
 
         if self.phase != RunPhase.TEST:
-            if isinstance(self.memory, EpisodicExperienceReplay):
-                if self.ap.algorithm.override_episode_rewards_with_the_last_transition_reward:
-                    for t in self.current_episode_buffer.transitions:
-                        t.reward = self.current_episode_buffer.transitions[-1].reward
-                self.call_memory('store_episode', self.current_episode_buffer)
+            if isinstance(self.memory, EpisodicExperienceReplay) or (
+                isinstance(self.memory, Memory)
+                and not isinstance(self.memory, ExperienceReplay)
+            ):
+                self.call_memory("store_episode", self.current_episode_buffer)
             elif self.ap.algorithm.store_transitions_only_when_episodes_are_terminated:
                 for transition in self.current_episode_buffer.transitions:
-                    self.call_memory('store', transition)
+                    self.call_memory("store", transition)
 
         if self.phase == RunPhase.TEST:
-            self.accumulated_rewards_across_evaluation_episodes += self.total_reward_in_current_episode
-            self.accumulated_shaped_rewards_across_evaluation_episodes += self.total_shaped_reward_in_current_episode
+            self.accumulated_rewards_across_evaluation_episodes += (
+                self.total_reward_in_current_episode
+            )
+            self.accumulated_shaped_rewards_across_evaluation_episodes += (
+                self.total_shaped_reward_in_current_episode
+            )
             self.num_evaluation_episodes_completed += 1
 
-            if self.spaces.reward.reward_success_threshold and \
-                    self.total_reward_in_current_episode >= self.spaces.reward.reward_success_threshold:
+            if (
+                self.spaces.reward.reward_success_threshold
+                and self.total_reward_in_current_episode
+                >= self.spaces.reward.reward_success_threshold
+            ):
                 self.num_successes_across_evaluation_episodes += 1
 
-        if self.ap.visualization.dump_csv and \
-                self.parent_level_manager.parent_graph_manager.time_metric == TimeTypes.EpisodeNumber:
+        if (
+            self.ap.visualization.dump_csv
+            and self.parent_level_manager.parent_graph_manager.time_metric
+            == TimeTypes.EpisodeNumber
+        ):
             self.update_log()
 
         # TODO verbosity was mistakenly removed from task_parameters on release 0.11.0, need to bring it back
@@ -616,14 +846,19 @@ class Agent(AgentInterface):
         self.curr_state = {}
         self.current_episode_steps_counter = 0
         self.episode_running_info = {}
-        self.current_episode_buffer = Episode(discount=self.ap.algorithm.discount, n_step=self.ap.algorithm.n_step)
+        self.current_episode_buffer = Episode(
+            discount=self.ap.algorithm.discount, n_step=self.ap.algorithm.n_step
+        )
         if self.exploration_policy:
             self.exploration_policy.reset()
         self.input_filter.reset()
         self.output_filter.reset()
         self.pre_network_filter.reset()
-        if isinstance(self.memory, EpisodicExperienceReplay):
-            self.call_memory('verify_last_episode_is_closed')
+        if isinstance(self.memory, EpisodicExperienceReplay) or (
+            isinstance(self.memory, Memory)
+            and not isinstance(self.memory, ExperienceReplay)
+        ):
+            self.call_memory("verify_last_episode_is_closed")
 
         for network in self.networks.values():
             network.online_network.reset_internal_memory()
@@ -645,18 +880,28 @@ class Agent(AgentInterface):
         """
 
         # update the target network of every network that has a target network
-        step_method = self.ap.algorithm.num_steps_between_copying_online_weights_to_target
+        step_method = (
+            self.ap.algorithm.num_steps_between_copying_online_weights_to_target
+        )
         if step_method.__class__ == TrainingSteps:
-            should_update = (self.training_iteration - self.last_target_network_update_step) >= step_method.num_steps
+            should_update = (
+                self.training_iteration - self.last_target_network_update_step
+            ) >= step_method.num_steps
             if should_update:
                 self.last_target_network_update_step = self.training_iteration
         elif step_method.__class__ == EnvironmentSteps:
-            should_update = (self.total_steps_counter - self.last_target_network_update_step) >= step_method.num_steps
+            should_update = (
+                self.total_steps_counter - self.last_target_network_update_step
+            ) >= step_method.num_steps
             if should_update:
                 self.last_target_network_update_step = self.total_steps_counter
         else:
-            raise ValueError("The num_steps_between_copying_online_weights_to_target parameter should be either "
-                             "EnvironmentSteps or TrainingSteps. Instead it is {}".format(step_method.__class__))
+            raise ValueError(
+                "The num_steps_between_copying_online_weights_to_target parameter should be either "
+                "EnvironmentSteps or TrainingSteps. Instead it is {}".format(
+                    step_method.__class__
+                )
+            )
         return should_update
 
     def _should_train(self):
@@ -683,18 +928,26 @@ class Agent(AgentInterface):
         steps = self.ap.algorithm.num_consecutive_playing_steps
 
         if steps.__class__ == EnvironmentEpisodes:
-            should_update = (self.current_episode - self.last_training_phase_step) >= steps.num_steps
-            should_update = should_update and self.call_memory('length') > 0
+            should_update = (
+                self.current_episode - self.last_training_phase_step
+            ) >= steps.num_steps
+            should_update = should_update and self.call_memory("length") > 0
 
         elif steps.__class__ == EnvironmentSteps:
-            should_update = (self.total_steps_counter - self.last_training_phase_step) >= steps.num_steps
-            should_update = should_update and self.call_memory('num_transitions') > 0
+            should_update = (
+                self.total_steps_counter - self.last_training_phase_step
+            ) >= steps.num_steps
+            should_update = should_update and self.call_memory("num_transitions") > 0
 
             if wait_for_full_episode:
-                should_update = should_update and self.current_episode_buffer.is_complete
+                should_update = (
+                    should_update and self.current_episode_buffer.is_complete
+                )
         else:
-            raise ValueError("The num_consecutive_playing_steps parameter should be either "
-                             "EnvironmentSteps or Episodes. Instead it is {}".format(steps.__class__))
+            raise ValueError(
+                "The num_consecutive_playing_steps parameter should be either "
+                "EnvironmentSteps or Episodes. Instead it is {}".format(steps.__class__)
+            )
 
         return should_update
 
@@ -717,22 +970,31 @@ class Agent(AgentInterface):
 
             # At the moment we only support a single batch size for all the networks
             networks_parameters = list(self.ap.network_wrappers.values())
-            assert all(net.batch_size == networks_parameters[0].batch_size for net in networks_parameters)
+            assert all(
+                net.batch_size == networks_parameters[0].batch_size
+                for net in networks_parameters
+            )
 
             batch_size = networks_parameters[0].batch_size
 
             # we either go sequentially through the entire replay buffer in the batch RL mode,
             # or sample randomly for the basic RL case.
-            training_schedule = self.call_memory('get_shuffled_training_data_generator', batch_size) if \
-                self.ap.is_batch_rl_training else [self.call_memory('sample', batch_size) for _ in
-                                      range(self.ap.algorithm.num_consecutive_training_steps)]
+            training_schedule = (
+                self.call_memory("get_shuffled_training_data_generator", batch_size)
+                if self.ap.is_batch_rl_training
+                else [
+                    self.call_memory("sample", batch_size)
+                    for _ in range(self.ap.algorithm.num_consecutive_training_steps)
+                ]
+            )
 
             for batch in training_schedule:
                 # update counters
                 self.training_iteration += 1
                 if self.pre_network_filter is not None:
-                    update_internal_state = self.ap.algorithm.update_pre_network_filters_state_on_train
-                    batch = self.pre_network_filter.filter(batch, update_internal_state=update_internal_state, deep_copy=False)
+                    batch = self.pre_network_filter.filter(
+                        batch, update_internal_state=False, deep_copy=False
+                    )
 
                 # if the batch returned empty then there are not enough samples in the replay buffer -> skip
                 # training step
@@ -748,29 +1010,50 @@ class Agent(AgentInterface):
                     #  for instance, for DDPG, the LR signal is currently not shown. Probably should be done through the
                     #  network directly instead of here
                     # decay learning rate
-                    if 'main' in self.ap.network_wrappers and \
-                            self.ap.network_wrappers['main'].learning_rate_decay_rate != 0:
-                        self.curr_learning_rate.add_sample(self.networks['main'].sess.run(
-                            self.networks['main'].online_network.current_learning_rate))
+                    if (
+                        "main" in self.ap.network_wrappers
+                        and self.ap.network_wrappers["main"].learning_rate_decay_rate
+                        != 0
+                    ):
+                        self.curr_learning_rate.add_sample(
+                            self.networks["main"].sess.run(
+                                self.networks[
+                                    "main"
+                                ].online_network.current_learning_rate
+                            )
+                        )
                     else:
-                        self.curr_learning_rate.add_sample(networks_parameters[0].learning_rate)
+                        self.curr_learning_rate.add_sample(
+                            networks_parameters[0].learning_rate
+                        )
 
-                    if any([network.has_target for network in self.networks.values()]) \
-                            and self._should_update_online_weights_to_target():
+                    if (
+                        any([network.has_target for network in self.networks.values()])
+                        and self._should_update_online_weights_to_target()
+                    ):
                         for network in self.networks.values():
-                            network.update_target_network(self.ap.algorithm.rate_for_copying_weights_to_target)
+                            network.update_target_network(
+                                self.ap.algorithm.rate_for_copying_weights_to_target
+                            )
 
-                        self.agent_logger.create_signal_value('Update Target Network', 1)
+                        self.agent_logger.create_signal_value(
+                            "Update Target Network", 1
+                        )
                     else:
-                        self.agent_logger.create_signal_value('Update Target Network', 0, overwrite=False)
+                        self.agent_logger.create_signal_value(
+                            "Update Target Network", 0, overwrite=False
+                        )
 
                     self.loss.add_sample(loss)
 
                     if self.imitation:
                         self.log_to_screen()
 
-            if self.ap.visualization.dump_csv and \
-                    self.parent_level_manager.parent_graph_manager.time_metric == TimeTypes.Epoch:
+            if (
+                self.ap.visualization.dump_csv
+                and self.parent_level_manager.parent_graph_manager.time_metric
+                == TimeTypes.Epoch
+            ):
                 # in BatchRL, or imitation learning, the agent never acts, so we have to get the stats out here.
                 # we dump the data out every epoch
                 self.update_log()
@@ -791,10 +1074,16 @@ class Agent(AgentInterface):
         :param curr_state: the current state to act upon.
         :return: chosen action, some action value describing the action (q-value, probability, etc)
         """
+        print(
+            ">>>>>>>>>>>>>>>> In choose action and about to pass <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+        )
         pass
 
-    def prepare_batch_for_inference(self, states: Union[Dict[str, np.ndarray], List[Dict[str, np.ndarray]]],
-                                    network_name: str) -> Dict[str, np.array]:
+    def prepare_batch_for_inference(
+        self,
+        states: Union[Dict[str, np.ndarray], List[Dict[str, np.ndarray]]],
+        network_name: str,
+    ) -> Dict[str, np.array]:
         """
         Convert curr_state into input tensors tensorflow is expecting. i.e. if we have several inputs states, stack all
         observations together, measurements together, etc.
@@ -808,7 +1097,9 @@ class Agent(AgentInterface):
         # convert to batch so we can run it through the network
         states = force_list(states)
         batches_dict = {}
-        for key in self.ap.network_wrappers[network_name].input_embedders_parameters.keys():
+        for key in self.ap.network_wrappers[
+            network_name
+        ].input_embedders_parameters.keys():
             # there are cases (e.g. ddpg) where the state does not contain all the information needed for running
             # through the network and this has to be added externally (e.g. ddpg where the action needs to be given in
             # addition to the current_state, so that all the inputs of the network will be filled)
@@ -817,57 +1108,206 @@ class Agent(AgentInterface):
 
         return batches_dict
 
-    def act(self, action: Union[None, ActionType]=None) -> ActionInfo:
+    def get_controller_action(self):
+        """
+        Get the controller action based on the joystick axes values.
+
+        Returns:
+            action (tuple): The converted action based on the joystick axes values.
+        """
+        url = 'http://192.168.0.49:8001/controller-input'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            obj = response.json()
+            print('Got object response', obj)
+            x_axis = obj['left_stick_x_axis']
+            y_axis = obj['right_trigger_axis']
+            # Convert these axis values into an action
+            print("x_axis", x_axis)
+            print("y_axis", y_axis)
+            action = self.convert_axes_to_action(x_axis, y_axis)
+            print("action", action)
+            return action
+        else:
+            Logger.error(f"Error getting controller input: {response.status_code}")
+
+    def convert_axes_to_action(self, x_axis, y_axis):
+        """
+        Converts the x and y axes values to a dictionary representing the action.
+
+        Args:
+            x_axis (float): The value of the x-axis.
+            y_axis (float): The value of the y-axis.
+
+        Returns:
+            dict: A dictionary representing the action with 'steering_angle' and 'speed' keys.
+        """
+        print("Mapping x_axis", x_axis, "y_axis", y_axis)
+        return {
+            "steering_angle": self.map_steering(x_axis),
+            "speed": self.map_acceleration(y_axis),
+        }
+
+    def map_steering(self, value: float) -> float:
+        print("Mapping steering value", value)
+        return -30 + (30 - (-30)) * (value - (-1)) / (1 - (-1))
+
+    def map_acceleration(self, value: float) -> float:
+        print("Mapping acceleration value", value)
+        # Input range is now [0, 1] and output range is [0.1, 4]
+        return 0.1 + (4 - 0.1) * (value - (-1)) / (1 - (-1))
+
+    def euclidean_distance(self, action1, action2) -> float:
+        """Calculate the Euclidean distance between two actions."""
+        print("Getting Euclidean distance between", action1, "and", action2, "...")
+        steering_diff = action1["steering_angle"] - action2["steering_angle"]
+        acceleration_diff = action1["speed"] - action2["speed"]
+        return (steering_diff**2 + acceleration_diff**2) ** 0.5
+
+    def find_closest_action_index(self, target_action, action_list):
+        """Find the index of the closest action to the target action in the action list."""
+        closest_index = None
+        min_distance = float("inf")
+        print("target_action", target_action)
+        print("action_list", action_list)
+        for index, action in enumerate(action_list):
+            print("action", action, "index", index , "target_action", target_action)
+            distance = self.euclidean_distance(target_action, action)
+            print("distance", distance)
+            if distance < min_distance:
+                min_distance = distance
+                closest_index = index
+                print("closest_index", closest_index)
+            else:
+                print("distance", distance, "min_distance", min_distance)
+
+        return closest_index
+
+
+    def act(self, action: Union[None, ActionType] = None) -> ActionInfo:
         """
         Given the agents current knowledge, decide on the next action to apply to the environment
 
         :param action: An action to take, overriding whatever the current policy is
         :return: An ActionInfo object, which contains the action and any additional info from the action decision process
         """
-        if self.phase == RunPhase.TRAIN and self.ap.algorithm.num_consecutive_playing_steps.num_steps == 0:
+
+        print(">>>>>>>> I AM ACTING HERE <<<<<<<<<<<<<")
+        closest_action = None
+        try:
+            meta_data = self.ap.env_agent.ctrl._model_metadata_
+            action_space = meta_data.action_space
+            action_space_type = meta_data.action_space_type
+            print("action_space", action_space)
+            print("action_space_type", action_space_type)
+            action = self.get_controller_action()
+            print("got action", action)
+            closest_action = self.find_closest_action_index(action, action_space)
+            print("closest_action", closest_action)
+
+            # for attr in dir(meta_data):
+            #     # Filter out special methods and properties
+            #     if not attr.startswith("__"):
+            #         # Get the value of each attribute
+            #         value = getattr(meta_data, attr)
+            #         print("-----------------")
+            #         print(f"{attr}: {value}")
+
+            # # for attr in dir(self.ap):
+            # #     # Filter out special methods and properties
+            # #     if not attr.startswith("__"):
+            # #         # Get the value of each attribute
+            # #         value = getattr(self.ap, attr)
+            # #         print("-----------------")
+            # #         print(f"{attr}: {value}")
+
+            # #         if attr == 'env_agent':
+            # #             env_obj = value
+
+            # #             for env_obj_attr in dir(env_obj):
+            # #                 if not env_obj_attr.startswith("__"):
+
+            # #                     env_obj_attr_value = getattr(env_obj, env_obj_attr)
+            # #                     print("-----------------")
+            # #                     print(f"{env_obj_attr}: {env_obj_attr_value}")
+
+            # #                     if env_obj_attr == 'ctrl':
+            # #                         ctrl_obj = env_obj_attr_value
+            # #                         for ctrl_obj_attr in dir(ctrl_obj):
+            # #                             if not ctrl_obj_attr.startswith("__"):
+            # #                                 ctrl_obj_attr_value = getattr(ctrl_obj, ctrl_obj_attr)
+            # #                                 print("-----------------")
+            # #                                 print(f"{ctrl_obj_attr}: {ctrl_obj_attr_value}")
+
+        except Exception as e:
+            print(f"Error initializing game controller: {e}")
+
+        if (
+            self.phase == RunPhase.TRAIN
+            and self.ap.algorithm.num_consecutive_playing_steps.num_steps == 0
+        ):
             # This agent never plays  while training (e.g. behavioral cloning)
             return None
 
         # count steps (only when training or if we are in the evaluation worker)
-        if self.phase != RunPhase.TEST or self.ap.task_parameters.evaluate_only is not None:
+        if self.phase != RunPhase.TEST or self.ap.task_parameters.evaluate_only:
             self.total_steps_counter += 1
         self.current_episode_steps_counter += 1
 
-        print('Action is ', action)
         # decide on the action
         if action is None:
-            if self.phase == RunPhase.HEATUP and not self.ap.algorithm.heatup_using_network_decisions:
+            if (
+                self.phase == RunPhase.HEATUP
+                and not self.ap.algorithm.heatup_using_network_decisions
+            ):
+                print(">>>>>>>> Getting random action <<<<<<<<<<<<<<<<<<<<<<<<<")
+                # print(self.spaces.action)
                 # random action
                 action = self.spaces.action.sample_with_info()
-                print('Action after action.sample_with_info now is ', action)
             else:
                 # informed action
+                print(">>>>>>>> Getting informed action <<<<<<<<<<<<<<<<<<<<<<<<<")
+
                 if self.pre_network_filter is not None:
                     # before choosing an action, first use the pre_network_filter to filter out the current state
-                    update_filter_internal_state = self.ap.algorithm.update_pre_network_filters_state_on_inference and \
-                                                   self.phase is not RunPhase.TEST
-                    curr_state = self.run_pre_network_filter_for_inference(self.curr_state, update_filter_internal_state)
+                    update_filter_internal_state = self.phase is not RunPhase.TEST
+                    curr_state = self.run_pre_network_filter_for_inference(
+                        self.curr_state, update_filter_internal_state
+                    )
 
                 else:
+                    print(">>>>>>>> Assigning current state <<<<<<<<<<<<<<<<<<<<<<<")
                     curr_state = self.curr_state
+
                 action = self.choose_action(curr_state)
-                print('Action after self.choose_action is ', action)
-
                 assert isinstance(action, ActionInfo)
-
+        
+        print('Bare action before filtering: {}'.format(action.action))
+        self.last_action_info = action
         self.last_action_info = action
 
+        print('self.output_filter', self.output_filter)
         # output filters are explicitly applied after recording self.last_action_info. This is
         # because the output filters may change the representation of the action so that the agent
         # can no longer use the transition in it's replay buffer. It is possible that these filters
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
-        print('filtered_action_info is  ', filtered_action_info)
-
+        print("filtered_action_info", filtered_action_info)
+        filtered_action_info = ActionInfo(action=closest_action, all_action_probabilities=0,
+                 action_value=closest_action)
+    
+        print("Action: {}".format(filtered_action_info.action))
+        print("Action value: {}".format(filtered_action_info.action))
+        print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
+        print("Action action_value: {}".format(filtered_action_info.action_value))
+        print("Action state_value: {}".format(filtered_action_info.state_value))
+        print("Action max_action_value: {}".format(filtered_action_info.max_action_value))
         return filtered_action_info
 
-    def run_pre_network_filter_for_inference(self, state: StateType, update_filter_internal_state: bool=True)\
-            -> StateType:
+    def run_pre_network_filter_for_inference(
+        self, state: StateType, update_filter_internal_state: bool = True
+    ) -> StateType:
         """
         Run filters which where defined for being applied right before using the state for inference.
 
@@ -875,13 +1315,11 @@ class Agent(AgentInterface):
         :param update_filter_internal_state: Should update the filter's internal state - should not update when evaluating
         :return: The filtered state
         """
+        print("run_pre_network_filter_for_inference")
         dummy_env_response = EnvResponse(next_state=state, reward=0, game_over=False)
-
-        # TODO actually we only want to run the observation filters. No point in running the reward filters as the
-        #  filtered reward is being ignored anyway (and it might unncecessarily affect the reward filters' internal
-        #  state).
-        return self.pre_network_filter.filter(dummy_env_response,
-                                              update_internal_state=update_filter_internal_state)[0].next_state
+        return self.pre_network_filter.filter(
+            dummy_env_response, update_internal_state=update_filter_internal_state
+        )[0].next_state
 
     def get_state_embedding(self, state: dict) -> np.ndarray:
         """
@@ -892,12 +1330,15 @@ class Agent(AgentInterface):
         """
         # TODO: this won't work anymore
         # TODO: instead of the state embedding (which contains the goal) we should use the observation embedding
-        embedding = self.networks['main'].online_network.predict(
+        embedding = self.networks["main"].online_network.predict(
             self.prepare_batch_for_inference(state, "main"),
-            outputs=self.networks['main'].online_network.state_embedding)
+            outputs=self.networks["main"].online_network.state_embedding,
+        )
         return embedding
 
-    def update_transition_before_adding_to_replay_buffer(self, transition: Transition) -> Transition:
+    def update_transition_before_adding_to_replay_buffer(
+        self, transition: Transition
+    ) -> Transition:
         """
         Allows agents to update the transition just before adding it to the replay buffer.
         Can be useful for agents that want to tweak the reward, termination signal, etc.
@@ -923,11 +1364,15 @@ class Agent(AgentInterface):
 
         # inject agent collected statistics, if required
         if self.ap.algorithm.use_accumulated_reward_as_measurement:
-            if 'measurements' in filtered_env_response.next_state:
-                filtered_env_response.next_state['measurements'] = np.append(filtered_env_response.next_state['measurements'],
-                                                                             self.total_shaped_reward_in_current_episode)
+            if "measurements" in filtered_env_response.next_state:
+                filtered_env_response.next_state["measurements"] = np.append(
+                    filtered_env_response.next_state["measurements"],
+                    self.total_shaped_reward_in_current_episode,
+                )
             else:
-                filtered_env_response.next_state['measurements'] = np.array([self.total_shaped_reward_in_current_episode])
+                filtered_env_response.next_state["measurements"] = np.array(
+                    [self.total_shaped_reward_in_current_episode]
+                )
 
         # if we are in the first step in the episode, then we don't have a a next state and a reward and thus no
         # transition yet, and therefore we don't need to store anything in the memory.
@@ -937,18 +1382,25 @@ class Agent(AgentInterface):
             self.curr_state = filtered_env_response.next_state
             return env_response.game_over
         else:
-            transition = Transition(state=copy.copy(self.curr_state), action=self.last_action_info.action,
-                                    reward=filtered_env_response.reward, next_state=filtered_env_response.next_state,
-                                    game_over=filtered_env_response.game_over, info=filtered_env_response.info)
+            transition = Transition(
+                state=copy.copy(self.curr_state),
+                action=self.last_action_info.action,
+                reward=filtered_env_response.reward,
+                next_state=filtered_env_response.next_state,
+                game_over=filtered_env_response.game_over,
+                info=filtered_env_response.info,
+            )
 
             # now that we have formed a basic transition - the next state progresses to be the current state
             self.curr_state = filtered_env_response.next_state
 
             # make agent specific changes to the transition if needed
-            transition = self.update_transition_before_adding_to_replay_buffer(transition)
+            transition = self.update_transition_before_adding_to_replay_buffer(
+                transition
+            )
 
             # add action info to transition
-            if type(self.parent).__name__ == 'CompositeAgent':
+            if type(self.parent).__name__ == "CompositeAgent":
                 transition.add_info(self.parent.last_action_info.__dict__)
             else:
                 transition.add_info(self.last_action_info.__dict__)
@@ -968,9 +1420,11 @@ class Agent(AgentInterface):
             # for episodic memories we keep the transitions in a local buffer until the episode is ended.
             # for regular memories we insert the transitions directly to the memory
             self.current_episode_buffer.insert(transition)
-            if not isinstance(self.memory, EpisodicExperienceReplay) \
-                    and not self.ap.algorithm.store_transitions_only_when_episodes_are_terminated:
-                self.call_memory('store', transition)
+            if (
+                isinstance(self.memory, ExperienceReplay)
+                and not self.ap.algorithm.store_transitions_only_when_episodes_are_terminated
+            ):
+                self.call_memory("store", transition)
 
         if self.ap.visualization.dump_in_episode_signals:
             self.update_step_in_episode_log()
@@ -985,7 +1439,9 @@ class Agent(AgentInterface):
         """
         pass
 
-    def get_predictions(self, states: List[Dict[str, np.ndarray]], prediction_type: PredictionType):
+    def get_predictions(
+        self, states: List[Dict[str, np.ndarray]], prediction_type: PredictionType
+    ):
         """
         Get a prediction from the agent with regard to the requested prediction_type.
         If the agent cannot predict this type of prediction_type, or if there is more than possible way to do so,
@@ -996,20 +1452,25 @@ class Agent(AgentInterface):
         :return: the predicted values
         """
 
-        predictions = self.networks['main'].online_network.predict_with_prediction_type(
+        predictions = self.networks["main"].online_network.predict_with_prediction_type(
             # states=self.dict_state_to_batches_dict(states, 'main'), prediction_type=prediction_type)
-            states=states, prediction_type=prediction_type)
+            states=states,
+            prediction_type=prediction_type,
+        )
 
         if len(predictions.keys()) != 1:
-            raise ValueError("The network has more than one component {} matching the requested prediction_type {}. ".
-                             format(list(predictions.keys()), prediction_type))
+            raise ValueError(
+                "The network has more than one component {} matching the requested prediction_type {}. ".format(
+                    list(predictions.keys()), prediction_type
+                )
+            )
         return list(predictions.values())[0]
 
     def set_incoming_directive(self, action: ActionType) -> None:
         """
         Allows setting a directive for the agent to follow. This is useful in hierarchy structures, where the agent
         has another master agent that is controlling it. In such cases, the master agent can define the goals for the
-        slave agent, define its observation, possible actions, etc. The directive type is defined by the agent
+        slave agent, define it's observation, possible actions, etc. The directive type is defined by the agent
         in-action-space.
 
         :param action: The action that should be set as the directive
@@ -1018,9 +1479,11 @@ class Agent(AgentInterface):
         if isinstance(self.in_action_space, GoalsSpace):
             self.current_hrl_goal = action
         elif isinstance(self.in_action_space, AttentionActionSpace):
-            self.input_filter.observation_filters['attention'].crop_low = action[0]
-            self.input_filter.observation_filters['attention'].crop_high = action[1]
-            self.output_filter.action_filters['masking'].set_masking(action[0], action[1])
+            self.input_filter.observation_filters["attention"].crop_low = action[0]
+            self.input_filter.observation_filters["attention"].crop_high = action[1]
+            self.output_filter.action_filters["masking"].set_masking(
+                action[0], action[1]
+            )
 
     def save_checkpoint(self, checkpoint_prefix: str) -> None:
         """
@@ -1031,11 +1494,15 @@ class Agent(AgentInterface):
         """
         checkpoint_dir = self.ap.task_parameters.checkpoint_save_dir
 
-        checkpoint_prefix = '.'.join([checkpoint_prefix] + self.full_name_id.split('/'))  # adds both level name and agent name
+        checkpoint_prefix = ".".join(
+            [checkpoint_prefix] + self.full_name_id.split("/")
+        )  # adds both level name and agent name
 
         self.input_filter.save_state_to_checkpoint(checkpoint_dir, checkpoint_prefix)
         self.output_filter.save_state_to_checkpoint(checkpoint_dir, checkpoint_prefix)
-        self.pre_network_filter.save_state_to_checkpoint(checkpoint_dir, checkpoint_prefix)
+        self.pre_network_filter.save_state_to_checkpoint(
+            checkpoint_dir, checkpoint_prefix
+        )
 
     def restore_checkpoint(self, checkpoint_dir: str) -> None:
         """
@@ -1044,9 +1511,15 @@ class Agent(AgentInterface):
         :param checkpoint_dir: The checkpoint dir to restore from
         :return: None
         """
-        checkpoint_prefix = '.'.join(self.full_name_id.split('/'))  # adds both level name and agent name
-        self.input_filter.restore_state_from_checkpoint(checkpoint_dir, checkpoint_prefix)
-        self.pre_network_filter.restore_state_from_checkpoint(checkpoint_dir, checkpoint_prefix)
+        checkpoint_prefix = ".".join(
+            self.full_name_id.split("/")
+        )  # adds both level name and agent name
+        self.input_filter.restore_state_from_checkpoint(
+            checkpoint_dir, checkpoint_prefix
+        )
+        self.pre_network_filter.restore_state_from_checkpoint(
+            checkpoint_dir, checkpoint_prefix
+        )
 
         # no output filters currently have an internal state to restore
         # self.output_filter.restore_state_from_checkpoint(checkpoint_dir)
@@ -1061,7 +1534,10 @@ class Agent(AgentInterface):
             network.sync()
 
     def get_success_rate(self) -> float:
-        return self.num_successes_across_evaluation_episodes / self.num_evaluation_episodes_completed
+        return (
+            self.num_successes_across_evaluation_episodes
+            / self.num_evaluation_episodes_completed
+        )
 
     def collect_savers(self, parent_path_suffix: str) -> SaverCollection:
         """
@@ -1079,16 +1555,17 @@ class Agent(AgentInterface):
     def get_current_time(self):
         pass
         return {
-                TimeTypes.EpisodeNumber: self.current_episode,
-                TimeTypes.TrainingIteration: self.training_iteration,
-                TimeTypes.EnvironmentSteps: self.total_steps_counter,
-                TimeTypes.WallClockTime: self.agent_logger.get_current_wall_clock_time(),
-                TimeTypes.Epoch: self.training_epoch}[self.parent_level_manager.parent_graph_manager.time_metric]
+            TimeTypes.EpisodeNumber: self.current_episode,
+            TimeTypes.TrainingIteration: self.training_iteration,
+            TimeTypes.EnvironmentSteps: self.total_steps_counter,
+            TimeTypes.WallClockTime: self.agent_logger.get_current_wall_clock_time(),
+            TimeTypes.Epoch: self.training_epoch,
+        }[self.parent_level_manager.parent_graph_manager.time_metric]
 
     def freeze_memory(self):
         """
         Shuffle episodes in the memory and freeze it to make sure that no extra data is being pushed anymore.
         :return: None
         """
-        self.call_memory('shuffle_episodes')
-        self.call_memory('freeze')
+        self.call_memory("shuffle_episodes")
+        self.call_memory("freeze")
