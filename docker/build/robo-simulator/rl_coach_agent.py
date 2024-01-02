@@ -1194,16 +1194,18 @@ class Agent(AgentInterface):
 
         print("Current Phase", self._phase)
         closest_action = None
-        try:
-            meta_data = self.ap.env_agent.ctrl._model_metadata_
-            action_space = meta_data.action_space
-            action = self.get_controller_action()
-            print("got action", action)
-            closest_action = self.find_closest_action_index(action, action_space)
-            print("closest_action", closest_action)
+        if self._phase == RunPhase.TRAIN:
+            try:  
+                print("Getting metadata", self.ap.env_agent.ctrl)
+                meta_data = self.ap.env_agent.ctrl._model_metadata_
+                action_space = meta_data.action_space
+                action = self.get_controller_action()
+                print("got action", action)
+                closest_action = self.find_closest_action_index(action, action_space)
+                print("closest_action", closest_action)
 
-        except Exception as e:
-            print(f"Error initializing game controller: {e}")
+            except Exception as e:
+                print(f"Error initializing game controller: {e}")
 
         if (
             self.phase == RunPhase.TRAIN
