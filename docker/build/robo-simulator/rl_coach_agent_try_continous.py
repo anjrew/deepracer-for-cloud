@@ -965,8 +965,6 @@ class Agent(AgentInterface):
                 self.set_user_input_state(controller_state)
                 
                 base_action = self.get_controller_action(controller_state)
-                print("meta_data['action_space_type']", meta_data['action_space_type'])
-
                 if meta_data['action_space_type'] == 'discrete':
                     closest_action = self.find_closest_action_index(base_action, action_space)
                 else:

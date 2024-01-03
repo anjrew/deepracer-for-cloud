@@ -964,15 +964,9 @@ class Agent(AgentInterface):
                 controller_state = self.get_controller_state()
                 self.set_user_input_state(controller_state)
                 
-                base_action = self.get_controller_action(controller_state)
-                print("meta_data['action_space_type']", meta_data['action_space_type'])
-
-                if meta_data['action_space_type'] == 'discrete':
-                    closest_action = self.find_closest_action_index(base_action, action_space)
-                else:
-                    closest_action = (base_action['steering_angle'], base_action['speed'])
-                
+                action = self.get_controller_action(controller_state)
                 print("got action", action)
+                closest_action = self.find_closest_action_index(action, action_space)
                 print("closest_action", closest_action)
 
             except Exception as e:

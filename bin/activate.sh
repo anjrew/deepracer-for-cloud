@@ -189,6 +189,7 @@ if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE_TAG; fi
 if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
   echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."
 fi
+echo "Sagemaker version: $SAGEMAKER_VER"
 
 ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE_TAG 2>/dev/null | jq -r .[].Config.Labels.version)
 if [ -z "$ROBOMAKER_VER" ]; then ROBOMAKER_VER=$DR_ROBOMAKER_IMAGE_TAG; fi

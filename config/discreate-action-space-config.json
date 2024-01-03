@@ -8,7 +8,7 @@
         "steering_angle": {
             "high": 30,
             "low": -30,
-            "step": 3,
+            "step": 5,
             "full_speed_angle": 10
         }
     }
