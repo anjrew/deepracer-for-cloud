@@ -187,6 +187,10 @@ then
   
 fi
 
+echo "Using DR_DOCKER_STYLE: " $DR_DOCKER_STYLE
+echo "Using DR_SAGEMAKER_IMAGE_TAG: " $DR_SAGEMAKER_IMAGE_TAG
+echo "Using DR_SAGEMAKER_IMAGE_NAME: " $DR_SAGEMAKER_IMAGE_NAME
+
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
@@ -205,6 +209,7 @@ then
     echo "       Example: docker node update --label-add Sagemaker=true $(docker node inspect self | jq .[0].ID -r)"
     exit 1
   fi
+  echo "Using SageMaker nodes: $SAGEMAKER_NODES"
 
   echo "Using Docker Swarm and deloying stack name '$STACK_NAME' with compose files '$COMPOSE_FILES'"
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME

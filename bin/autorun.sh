@@ -20,6 +20,7 @@ SYSENV="$INSTALL_DIR_TEMP/system.env"
 SAGEMAKER_IMAGE_TAG=$(cat $SYSENV | grep DR_SAGEMAKER_IMAGE_TAG | sed 's/.*=//')
 ROBOMAKER_IMAGE_TAG=$(cat $SYSENV | grep DR_ROBOMAKER_IMAGE_TAG | sed 's/.*=//')
 
+echo "Pulling docker images: $SAGEMAKER_IMAGE_TAG for sagemaker and $ROBOMAKER_IMAGE_TAG for robomaker"
 docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_IMAGE_TAG
 docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_IMAGE_TAG
 

@@ -182,6 +182,9 @@ else
 fi
 sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
 
+echo "init.sh: Pulling docker images: $SAGEMAKER_VERSION for sagemaker and $ROBOMAKER_VERSION for robomaker"
+
+
 docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
 docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION
 docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
