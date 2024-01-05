@@ -186,7 +186,6 @@ DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/d
 
 echo "Checking dependancies DR_SAGEMAKER_IMAGE_TAG: $DR_SAGEMAKER_IMAGE_TAG"
 SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE_TAG 2>/dev/null | jq -r .[].Config.Labels.version)
-echo "Sagemaker version: $SAGEMAKER_VER"
 if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE_TAG; fi
 if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
   echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."

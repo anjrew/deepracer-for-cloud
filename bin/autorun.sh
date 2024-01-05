@@ -17,7 +17,7 @@ aws s3 sync s3://$S3_LOCATION $INSTALL_DIR_TEMP
 
 ## get the right docker containers, if needed
 SYSENV="$INSTALL_DIR_TEMP/system.env"
-SAGEMAKER_IMAGE_TAG=$(cat $SYSENV | grep DR_SAGEMAKER_IMAGE_TAG | sed 's/.*=//')
+SAGEMAKER_IMAGE=$(cat $SYSENV | grep DR_SAGEMAKER_IMAGE_TAG | sed 's/.*=//')
 ROBOMAKER_IMAGE_TAG=$(cat $SYSENV | grep DR_ROBOMAKER_IMAGE_TAG | sed 's/.*=//')
 
 echo "Pulling docker images: $SAGEMAKER_IMAGE_TAG for sagemaker and $ROBOMAKER_IMAGE_TAG for robomaker"

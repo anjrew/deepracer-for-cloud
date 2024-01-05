@@ -10,7 +10,3 @@ services:
       - AWS_ACCESS_KEY_ID=${DR_LOCAL_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${DR_LOCAL_SECRET_ACCESS_KEY}
       - COMPOSE_FILE=docker-compose-keys
-    volumes:
-      - /dev/bus/usb:/dev/bus/usb # Forwards the local USB devices to the container.
-      - /dev/input:/dev/input # Forwards the local input devices to the container.
-    privileged: true
