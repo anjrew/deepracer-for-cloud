@@ -83,7 +83,7 @@ class Agent(AgentInterface):
         self.imitation = False
         self.agent_logger = Logger()
         self.agent_episode_logger = EpisodeLogger()
-        print("[RL] Created agent loggers")
+        # print("[RL] Created agent loggers")
         # get the memory
         # - distributed training + shared memory:
         #   * is chief?  -> create the memory and add it to the scratchpad
@@ -93,30 +93,30 @@ class Agent(AgentInterface):
         memory_name = self.ap.memory.path.split(':')[1]
         self.memory_lookup_name = self.full_name_id + '.' + memory_name
         if self.shared_memory and not self.is_chief:
-            print("[RL] Creating shared memory")
+            # print("[RL] Creating shared memory")
             self.memory = self.shared_memory_scratchpad.get(self.memory_lookup_name)
         else:
-            print("[RL] Dynamic import of memory: ", self.ap.memory)
+            # print("[RL] Dynamic import of memory: ", self.ap.memory)
             # modules
             self.memory = dynamic_import_and_instantiate_module_from_params(self.ap.memory)
-            print("[RL] Dynamically imported of memory", self.memory)
+            # print("[RL] Dynamically imported of memory", self.memory)
 
             if hasattr(self.ap.memory, 'memory_backend_params'):
-                print("[RL] Getting memory backend", self.ap.memory.memory_backend_params)
+                # print("[RL] Getting memory backend", self.ap.memory.memory_backend_params)
                 self.memory_backend = get_memory_backend(self.ap.memory.memory_backend_params)
-                print("[RL] Memory backend", self.memory_backend)
+                # print("[RL] Memory backend", self.memory_backend)
 
                 if self.ap.memory.memory_backend_params.run_type != 'trainer':
-                    print("[RL] Setting memory backend", self.memory_backend)
+                    # print("[RL] Setting memory backend", self.memory_backend)
                     self.memory.set_memory_backend(self.memory_backend)
 
             if self.shared_memory and self.is_chief:
-                print("[RL] Shared memory scratchpad")
+                # print("[RL] Shared memory scratchpad")
                 self.shared_memory_scratchpad.add(self.memory_lookup_name, self.memory)
 
         # set devices
         if type(agent_parameters.task_parameters) == DistributedTaskParameters:
-            print("[RL] Setting distributed devices")
+            # print("[RL] Setting distributed devices")
             self.has_global = True
             self.replicated_device = agent_parameters.task_parameters.device
             self.worker_device = "/job:worker/task:{}".format(self.task_id)
@@ -125,7 +125,7 @@ class Agent(AgentInterface):
             else:
                 self.worker_device += "/device:GPU:0"
         else:
-            print("[RL] Setting devices")
+            # print("[RL] Setting devices")
             self.has_global = False
             self.replicated_device = None
             if agent_parameters.task_parameters.use_cpu:
@@ -133,7 +133,7 @@ class Agent(AgentInterface):
             else:
                 self.worker_device = [Device(DeviceType.GPU, i)
                                       for i in range(agent_parameters.task_parameters.num_gpu)]
-        print("[RL] Setting filters")
+        # print("[RL] Setting filters")
         # filters
         self.input_filter = self.ap.input_filter
         self.input_filter.set_name('input_filter')
@@ -152,26 +152,26 @@ class Agent(AgentInterface):
         # 3. Single worker (=both TF and Mxnet) - no data sharing needed + numpy arithmetic backend
 
         if hasattr(self.ap.memory, 'memory_backend_params') and self.ap.algorithm.distributed_coach_synchronization_type:
-            print("[RL] Setting filter devices: distributed")
+            # print("[RL] Setting filter devices: distributed")
             self.input_filter.set_device(device, memory_backend_params=self.ap.memory.memory_backend_params, mode='numpy')
             self.output_filter.set_device(device, memory_backend_params=self.ap.memory.memory_backend_params, mode='numpy')
             self.pre_network_filter.set_device(device, memory_backend_params=self.ap.memory.memory_backend_params, mode='numpy')
         elif (type(agent_parameters.task_parameters) == DistributedTaskParameters and
               agent_parameters.task_parameters.framework_type == Frameworks.tensorflow):
-            print("[RL] Setting filter devices: tf")
+            # print("[RL] Setting filter devices: tf")
             self.input_filter.set_device(device, mode='tf')
             self.output_filter.set_device(device, mode='tf')
             self.pre_network_filter.set_device(device, mode='tf')
         else:
-            print("[RL] Setting filter devices: numpy")
+            # print("[RL] Setting filter devices: numpy")
             self.input_filter.set_device(device, mode='numpy')
             self.output_filter.set_device(device, mode='numpy')
             self.pre_network_filter.set_device(device, mode='numpy')
 
         # initialize all internal variables
-        print("[RL] Setting Phase")
+        # print("[RL] Setting Phase")
         self._phase = RunPhase.HEATUP
-        print("[RL] After setting Phase")
+        # print("[RL] After setting Phase")
         self.total_shaped_reward_in_current_episode = 0
         self.total_reward_in_current_episode = 0
         self.total_steps_counter = 0
@@ -203,7 +203,7 @@ class Agent(AgentInterface):
         # environment parameters
         self.spaces = None
         self.in_action_space = self.ap.algorithm.in_action_space
-        print("[RL] Setting signals")
+        # print("[RL] Setting signals")
         # signals
         self.episode_signals = []
         self.step_signals = []
@@ -218,7 +218,7 @@ class Agent(AgentInterface):
 
         # batch rl
         self.ope_manager = OpeManager() if self.ap.is_batch_rl_training else None
-        print("[RL] Agent init successful")
+        # print("[RL] Agent init successful")
 
 
     @property
@@ -378,7 +378,7 @@ class Agent(AgentInterface):
                                                     worker_device=self.worker_device)
 
             if self.ap.visualization.print_networks_summary:
-                print(networks[network_name])
+                # print(networks[network_name])
 
         return networks
 
@@ -864,7 +864,7 @@ class Agent(AgentInterface):
         
         # Convert these axis values into an action
         action = self.convert_axes_to_action(x_axis, y_axis)
-        print("Mapped action", action)
+        # print("Mapped action", action)
         return action
     
     def set_user_input_state(self, controller_state):
@@ -937,7 +937,7 @@ class Agent(AgentInterface):
             if distance < min_distance:
                 min_distance = distance
                 closest_index = index
-                print("closest_action_match", action ,closest_index)
+                # print("closest_action_match", action ,closest_index)
 
         return closest_index
 
@@ -953,12 +953,12 @@ class Agent(AgentInterface):
             # This agent never plays  while training (e.g. behavioral cloning)
             return None
 
-        print("Current Phase", self._phase)
-        print("Input action" , action)
+        # print("Current Phase", self._phase)
+        # print("Input action" , action)
         closest_action = None
         if self._phase == RunPhase.TRAIN:
             try:  
-                print("Getting metadata", self.ap.env_agent.ctrl)
+                # print("Getting metadata", self.ap.env_agent.ctrl)
                 meta_data = self.ap.env_agent.ctrl._model_metadata_
                 action_space = meta_data.action_space
                 
@@ -966,12 +966,12 @@ class Agent(AgentInterface):
                 self.set_user_input_state(controller_state)
                 
                 controller_action = self.get_controller_action(controller_state)
-                print("got controller_action", controller_action)
+                # print("got controller_action", controller_action)
                 closest_action = self.find_closest_action_index(controller_action, action_space)
-                print("closest_action", closest_action)
+                # print("closest_action", closest_action)
 
             except Exception as e:
-                print(f"Error initializing game controller: {e}")
+                # print(f"Error initializing game controller: {e}")
 
 
         # count steps (only when training or if we are in the evaluation worker)
@@ -996,7 +996,7 @@ class Agent(AgentInterface):
                 action = self.choose_action(curr_state)
                 assert isinstance(action, ActionInfo)
                 
-        print("auto_generated_action:", action)   
+        # print("auto_generated_action:", action)   
         
         if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
             action = ActionInfo(
@@ -1006,7 +1006,7 @@ class Agent(AgentInterface):
                 state_value=action.state_value
             )
         
-        print('Bare action before filtering: {}'.format(action))
+        # print('Bare action before filtering: {}'.format(action))
         self.last_action_info = action
 
         # output filters are explicitly applied after recording self.last_action_info. This is
@@ -1015,12 +1015,12 @@ class Agent(AgentInterface):
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
 
-        print("Action: {}".format(filtered_action_info.action))
-        print("Action value: {}".format(filtered_action_info.action))
-        print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
-        print("Action action_value: {}".format(filtered_action_info.action_value))
-        print("Action state_value: {}".format(filtered_action_info.state_value))
-        print("Action max_action_value: {}".format(filtered_action_info.max_action_value))
+        # print("Action: {}".format(filtered_action_info.action))
+        # print("Action value: {}".format(filtered_action_info.action))
+        # print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
+        # print("Action action_value: {}".format(filtered_action_info.action_value))
+        # print("Action state_value: {}".format(filtered_action_info.state_value))
+        # print("Action max_action_value: {}".format(filtered_action_info.max_action_value))
         return filtered_action_info
 
     def run_pre_network_filter_for_inference(self, state: StateType, update_filter_internal_state: bool=True)\

@@ -972,6 +972,9 @@ class Agent(AgentInterface):
 
             except Exception as e:
                 print(f"Error initializing game controller: {e}")
+        else:
+            self.user_input_is_enabled = False
+            
 
 
         # count steps (only when training or if we are in the evaluation worker)
