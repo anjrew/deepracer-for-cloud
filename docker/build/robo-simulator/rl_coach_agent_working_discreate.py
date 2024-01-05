@@ -954,6 +954,7 @@ class Agent(AgentInterface):
             return None
 
         print("Current Phase", self._phase)
+        print("Input action" , action)
         closest_action = None
         if self._phase == RunPhase.TRAIN:
             try:  
@@ -964,9 +965,9 @@ class Agent(AgentInterface):
                 controller_state = self.get_controller_state()
                 self.set_user_input_state(controller_state)
                 
-                action = self.get_controller_action(controller_state)
-                print("got action", action)
-                closest_action = self.find_closest_action_index(action, action_space)
+                controller_action = self.get_controller_action(controller_state)
+                print("got controller_action", controller_action)
+                closest_action = self.find_closest_action_index(controller_action, action_space)
                 print("closest_action", closest_action)
 
             except Exception as e:
@@ -995,7 +996,7 @@ class Agent(AgentInterface):
                 action = self.choose_action(curr_state)
                 assert isinstance(action, ActionInfo)
                 
-        print("auto_generated_action:", action.__dict__)   
+        print("auto_generated_action:", action)   
         
         if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
             action = ActionInfo(
