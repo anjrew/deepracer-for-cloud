@@ -903,7 +903,7 @@ class Agent(AgentInterface):
         }
 
     def map_steering(self, value: float) -> float:
-        SENSITIVITY=2
+        SENSITIVITY=1
         value = value ** (2 * SENSITIVITY - 1)
         # Mapping value from [-1, 1] to [30, -30]
         return 30 - (30 - (-30)) * (value - (-1)) / (1 - (-1))
@@ -971,7 +971,7 @@ class Agent(AgentInterface):
                 # print("closest_action", closest_action)
 
             except Exception as e:
-                print(f"Error initializing game controller: {e}")
+                Logger.error(f"Error initializing game controller: {e}")
         else:
             self.user_input_is_enabled = False
 
