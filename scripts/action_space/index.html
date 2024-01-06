@@ -7,21 +7,28 @@
 </head>
 
 <body>
+    <div>
+        <label for="speedPrecision">Speed Rounding Precision:</label>
+        <input type="number" id="speedPrecision" value="2">
+        <label for="steeringPrecision">Steering Angle Rounding Precision:</label>
+        <input type="number" id="steeringPrecision" value="0">
+    </div>
+
     <div style="display: flex;" >
 
         <div id="coordinateSystem" onclick="addPoint(event)">
             <!-- Polar grid circles -->
             <div class="polar-grid">
-                <div style="transform: translate(-18px, 56px);" class="grid-label">4/ms</div>
+                <div style="transform: translate(105px, 56px);" class="grid-label">4/ms</div>
             </div>
             <div class="polar-grid">
-                <div style="transform: translate(-18px, 56px);" class="grid-label">3m/s</div>
+                <div style="transform: translate(81px, 43px);" class="grid-label">3m/s</div>
             </div>
             <div class="polar-grid">
-                <div style="transform: translate(-16px, 56px);;" class="grid-label">2m/s</div>
+                <div style="transform: translate(48px, 29px);" class="grid-label">2m/s</div>
             </div>
             <div class="polar-grid">
-                <div style="transform: translate(-9px, 19px);" class="grid-label">1m/s</div>
+                <div style="transform: translate(18px, 11px);" class="grid-label">1m/s</div>
             </div>
 
             <!-- Angle lines -->

@@ -6,10 +6,36 @@ function addPoint(event) {
     const x = event.clientX - rect.left - rect.width / 2;
     const y = -(event.clientY - rect.top - rect.height / 2);
 
-    // Calculate the radius and angle
-    const r = Math.sqrt(x * x + y * y);
-    const theta = Math.atan2(y, x) * (180 / Math.PI);
+    console.log("x:", x, "y:", y); // Debugging
 
+    // Fetch rounding factors
+    const speedRoundingFactor = parseInt(document.getElementById('speedPrecision').value, 10);
+    const steeringRoundingFactor = parseInt(document.getElementById('steeringPrecision').value, 10);
+
+    console.log("Speed Rounding Factor:", speedRoundingFactor, "Steering Rounding Factor:", steeringRoundingFactor); // Debugging
+
+    // Calculate the speed and steering angle
+    let rawSpeed = Math.sqrt(x * x + y * y); // Assuming speed is the radius
+    console.log("Raw Speed:", rawSpeed); // Debugging
+
+    let speed = scaleSpeedValue(rawSpeed, [0, 150], [1, 4]);
+    console.log("Scaled Speed:", speed); // Debugging
+
+    speed = roundToNearest(speed, speedRoundingFactor); // Round to nearest factor
+    console.log("Rounded Speed:", speed); // Debugging
+
+    let rawSteeringAngle = Math.atan2(y, x) * (180 / Math.PI) - 90; // Adjusting the angle
+    console.log("Raw Steering Angle:", rawSteeringAngle); // Debugging
+
+    let steering_angle = roundToNearest(rawSteeringAngle, steeringRoundingFactor); // Round to nearest factor
+    console.log("Rounded Steering Angle:", steering_angle); // Debugging
+
+    // Create a JSON object
+    const data = {
+        "steering_angle": steering_angle,
+        "speed": speed
+    };
+    
     // Adding a visual point
     const point = document.createElement("div");
     point.classList.add("point");
@@ -17,8 +43,21 @@ function addPoint(event) {
     point.style.top = `${-y + rect.height / 2 - 2.5}px`;
     document.getElementById("coordinateSystem").appendChild(point);
 
-    // Adding to list
+    // Adding to list as JSON string
     const listItem = document.createElement("li");
-    listItem.textContent = `Radius: ${Math.round(r.toFixed(2))}, Angle: ${Math.round(theta.toFixed(2) - 90)}`;
+    listItem.textContent = JSON.stringify(data, null, 2);
     document.getElementById("list").appendChild(listItem);
+}
+
+
+function scaleSpeedValue(value, fromRange, toRange) {
+    const scale = (toRange[1] - toRange[0]) / (fromRange[1] - fromRange[0]);
+    return toRange[0] + scale * (value - fromRange[0]);
+}
+
+function roundToNearest(value, nearest) {
+    if (nearest === 0) {
+        return value; // If nearest is 0, return the value as is
+    }
+    return Math.round(value / nearest) * nearest;
 }
