@@ -9,8 +9,8 @@ function addPoint(event) {
     console.log("x:", x, "y:", y); // Debugging
 
     // Fetch rounding factors
-    const speedRoundingFactor = parseInt(document.getElementById('speedPrecision').value, 10);
-    const steeringRoundingFactor = parseInt(document.getElementById('steeringPrecision').value, 10);
+    const speedRoundingFactor = parseFloat(document.getElementById('speedPrecision').value, 10);
+    const steeringRoundingFactor = parseFloat(document.getElementById('steeringPrecision').value, 10);
 
     console.log("Speed Rounding Factor:", speedRoundingFactor, "Steering Rounding Factor:", steeringRoundingFactor); // Debugging
 
@@ -18,7 +18,7 @@ function addPoint(event) {
     let rawSpeed = Math.sqrt(x * x + y * y); // Assuming speed is the radius
     console.log("Raw Speed:", rawSpeed); // Debugging
 
-    let speed = scaleSpeedValue(rawSpeed, [0, 150], [1, 4]);
+    let speed = scaleSpeedValue(rawSpeed, [0, 150], [0, 4]);
     console.log("Scaled Speed:", speed); // Debugging
 
     speed = roundToNearest(speed, speedRoundingFactor); // Round to nearest factor
@@ -55,9 +55,29 @@ function scaleSpeedValue(value, fromRange, toRange) {
     return toRange[0] + scale * (value - fromRange[0]);
 }
 
+
 function roundToNearest(value, nearest) {
     if (nearest === 0) {
-        return value; // If nearest is 0, return the value as is
+        return value; // Return value as is if nearest is 0
     }
-    return Math.round(value / nearest) * nearest;
+
+    // Use the countDecimals function to determine the number of decimal places in the rounding factor
+    console.log("nearest:", nearest); // Debugging
+
+    const factorDecimalPlaces = countDecimals(nearest);
+    console.log("Factor Decimal Places:", factorDecimalPlaces); // Debugging
+
+    // Scale up both value and nearest to avoid floating point issues
+    const scaledUpNearest = nearest * Math.pow(10, factorDecimalPlaces);
+    const scaledUpValue = value * Math.pow(10, factorDecimalPlaces);
+
+    // Perform rounding on scaled values and scale down
+    const roundedValue = Math.round(scaledUpValue / scaledUpNearest) * scaledUpNearest;
+    return roundedValue / Math.pow(10, factorDecimalPlaces);
+}
+
+
+function countDecimals(value) {
+    if (Math.floor(value) === value) return 0;
+    return value.toString().split(".")[1].length || 0;
 }
