@@ -137,6 +137,6 @@ class TrainingImageEditing(ImageEditingInterface):
         mp4_video_metrics_info = metric_info[FrameQueueData.AGENT_METRIC_INFO.value]
         cur_training_phase = metric_info[FrameQueueData.TRAINING_PHASE.value]
 
-        major_cv_image = self._edit_major_cv_image(major_cv_image, cur_training_phase, metric_info)
+        major_cv_image = self._edit_major_cv_image(major_cv_image, cur_training_phase, mp4_video_metrics_info)
         major_cv_image = self._plot_agents_on_major_cv_image(major_cv_image, mp4_video_metrics_info)
         return cv2.cvtColor(major_cv_image, cv2.COLOR_BGRA2RGB)

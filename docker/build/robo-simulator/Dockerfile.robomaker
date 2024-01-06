@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir \
 COPY ./start.sh /start.sh
 
 COPY ./rl_coach_agent.py /usr/local/lib/python3.6/dist-packages/rl_coach/agents/agent.py
-COPY ./training_image_editing.py /opt/install/deepracer_simulation_environment/lib/python2.7/dist-packages/mp4_saving/training_image_editing.py
+# COPY ./training_image_editing.py /opt/install/deepracer_simulation_environment/lib/python2.7/dist-packages/mp4_saving/training_image_editing.py
 
 
 

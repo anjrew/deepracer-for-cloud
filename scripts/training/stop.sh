@@ -43,4 +43,4 @@ else
     docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR down
 fi
 
-
+${DR_DIR}/scripts/training/increment.sh
