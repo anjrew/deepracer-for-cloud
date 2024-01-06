@@ -1,0 +1,79 @@
+#coordinateSystem {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    position: relative;
+    margin: 20px;
+    overflow: visible; 
+}
+
+#coordinatesList {
+    position: relative;
+    margin-left: 20px;
+}
+
+.polar-grid {
+    border: 1px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+
+.polar-grid:nth-child(1) {
+    width: 100%;
+    height: 100%;
+    margin-left: -50%;
+    margin-top: -50%;
+}
+
+.polar-grid:nth-child(2) {
+    width: 75%;
+    height: 75%;
+    margin-left: -37.5%;
+    margin-top: -37.5%;
+}
+
+.polar-grid:nth-child(3) {
+    width: 50%;
+    height: 50%;
+    margin-left: -25%;
+    margin-top: -25%;
+}
+
+.polar-grid:nth-child(4) {
+    width: 25%;
+    height: 25%;
+    margin-left: -12.5%;
+    margin-top: -12.5%;
+}
+
+
+.angle-line {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50%;
+    height: 2px;
+    background-color: black;
+    transform-origin: 0% 0%;
+}
+
+.point {
+    width: 5px;
+    height: 5px;
+    background-color: red;
+    position: absolute;
+    border-radius: 50%;
+}
+
+#coordinateSystem {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    position: relative;
+    margin: 20px;
+    overflow: hidden;
+}
