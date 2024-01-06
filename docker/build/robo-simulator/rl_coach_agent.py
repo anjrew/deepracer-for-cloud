@@ -378,7 +378,7 @@ class Agent(AgentInterface):
                                                     worker_device=self.worker_device)
 
             if self.ap.visualization.print_networks_summary:
-                # print(networks[network_name])
+                print(networks[network_name])
 
         return networks
 
@@ -971,7 +971,7 @@ class Agent(AgentInterface):
                 # print("closest_action", closest_action)
 
             except Exception as e:
-                Logger.error(f"Error initializing game controller: {e}")
+                print(f"Error initializing game controller: {e}")
         else:
             self.user_input_is_enabled = False
 
