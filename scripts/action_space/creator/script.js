@@ -1,3 +1,6 @@
+
+let actions = []; // Global array to store actions
+
 function addPoint(event) {
     // Get the bounding rectangle of the coordinate system
     const rect = document.getElementById('coordinateSystem').getBoundingClientRect();
@@ -35,7 +38,8 @@ function addPoint(event) {
         "steering_angle": steering_angle,
         "speed": speed
     };
-    
+    actions.push(data);
+
     // Adding a visual point
     const point = document.createElement("div");
     point.classList.add("point");
@@ -46,7 +50,20 @@ function addPoint(event) {
     // Adding to list as JSON string
     const listItem = document.createElement("li");
     listItem.textContent = JSON.stringify(data, null, 2);
+
+
+    // Create a delete button for the list item
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.onclick = function() {
+        point.remove(); // Remove the visual point
+        listItem.remove(); // Remove the list item
+    };
+
+    // Append the delete button to the list item
+    listItem.appendChild(deleteBtn);
     document.getElementById("list").appendChild(listItem);
+    
 }
 
 
@@ -81,3 +98,8 @@ function countDecimals(value) {
     if (Math.floor(value) === value) return 0;
     return value.toString().split(".")[1].length || 0;
 }
+
+document.getElementById('generateJsonBtn').addEventListener('click', function() {
+    const jsonOutput = JSON.stringify(actions, null, 2);
+    console.log(jsonOutput); // Output JSON to console, or handle as needed
+});
