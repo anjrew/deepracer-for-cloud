@@ -971,8 +971,9 @@ class Agent(AgentInterface):
                 # print("closest_action", closest_action)
 
             except Exception as e:
-                # print(f"Error initializing game controller: {e}")
-
+                print(f"Error initializing game controller: {e}")
+        else:
+            self.user_input_is_enabled = False
 
         # count steps (only when training or if we are in the evaluation worker)
         if self.phase != RunPhase.TEST or self.ap.task_parameters.evaluate_only:
