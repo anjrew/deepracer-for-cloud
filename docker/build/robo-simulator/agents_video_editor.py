@@ -267,6 +267,7 @@ class AgentsVideoEditor(object):
 
         # convert ros image message to cv image
         try:
+            print("AgentsVideoEditor,_edit_camera_images","frame_data", frame_data, "is_mp4", is_mp4)
             edited_frame_result = dict()
             self._edit_main_camera_images(frame_data, metric_info, is_mp4, edited_frame_result)
             # Edit top camera image only if its F1
