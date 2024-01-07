@@ -73,7 +73,7 @@ class TrainingImageEditing(ImageEditingInterface):
             # agents_speed = metric_info.throttle
 
             # Speed
-            loc_x, loc_y = XYPixelLoc.SPEED_EVAL_LOC.value
+            loc_x, loc_y = (10, 50)
 
             speed_text = "{} m/s".format(utils.get_speed_formatted_str(agents_speed))
             major_cv_image = utils.write_text_on_image(image=major_cv_image, text=speed_text,
