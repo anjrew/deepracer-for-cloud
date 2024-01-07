@@ -69,8 +69,8 @@ class TrainingImageEditing(ImageEditingInterface):
             LOG.info("Got metric info: {}".format(metric_info))
             print("Here is the info", metric_info)
             # Adding display name to the image
-            agents_speed = 0        
-            agents_speed = metric_info.throttle
+            agents_speed = 9999        
+            # agents_speed = metric_info.throttle
 
             # Speed
             loc_x, loc_y = XYPixelLoc.SPEED_EVAL_LOC.value
