@@ -1,4 +1,4 @@
-FROM awsdeepracercommunity/deepracer-robomaker:5.1.0-cpu-avx2
+FROM awsdeepracercommunity/deepracer-robomaker:5.1.1-cpu-avx2
 
 # Install necessary packages including Git and DKMS
 RUN apt-get update \

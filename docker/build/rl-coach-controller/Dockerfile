@@ -1,4 +1,4 @@
-FROM awsdeepracercommunity/deepracer-rlcoach:5.1.0
+FROM awsdeepracercommunity/deepracer-rlcoach:5.1.1
 
 
 COPY ./multi_agent_coach /deepracer/markov/multi_agent_coach
