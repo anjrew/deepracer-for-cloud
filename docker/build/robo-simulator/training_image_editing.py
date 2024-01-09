@@ -66,8 +66,7 @@ class TrainingImageEditing(ImageEditingInterface):
                                                    font=self.training_phase_font, font_color=None,
                                                    font_shadow_color=RaceCarColorToRGB.Black.value)
         try:
-            LOG.info("Got metric info: {}".format(metric_info))
-            print("Here is the info", metric_info)
+            # LOG.info("Got metric info: {}".format(metric_info))
             # Adding display name to the image
             agents_speed = 9999        
             # agents_speed = metric_info.throttle

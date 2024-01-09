@@ -958,17 +958,25 @@ class Agent(AgentInterface):
         closest_action = None
         if self._phase == RunPhase.TRAIN:
             try:  
-                # print("Getting metadata", self.ap.env_agent.ctrl)
+                print("Getting metadata", self.ap.env_agent.ctrl)
+                print("meta data detail", self.ap.env_agent.ctrl.__dict__)
+
                 meta_data = self.ap.env_agent.ctrl._model_metadata_
+                print("meta data", meta_data)
                 action_space = meta_data.action_space
+                print("action_space", action_space)
                 
                 controller_state = self.get_controller_state()
+                print("controller_state", controller_state)
                 self.set_user_input_state(controller_state)
                 
-                controller_action = self.get_controller_action(controller_state)
-                # print("got controller_action", controller_action)
-                closest_action = self.find_closest_action_index(controller_action, action_space)
-                # print("closest_action", closest_action)
+                base_action = self.get_controller_action(controller_state)
+                if meta_data['action_space_type'] == 'discrete':
+                    closest_action = self.find_closest_action_index(base_action, action_space)
+                else:
+                    closest_action = (base_action['steering_angle'], base_action['speed'])
+                
+                print("closest_action", closest_action)
 
             except Exception as e:
                 print(f"Error initializing game controller: {e}")
@@ -997,15 +1005,26 @@ class Agent(AgentInterface):
                 action = self.choose_action(curr_state)
                 assert isinstance(action, ActionInfo)
                 
-        # print("auto_generated_action:", action)   
-        
-        if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
-            action = ActionInfo(
+        print("auto_generated_action:", action)  
+        print("auto_generated_action,action:", action.action_value)  
+
+        user_input_action = ActionInfo(
                 action=closest_action, 
                 all_action_probabilities=action.all_action_probabilities,
                 action_value=closest_action,
                 state_value=action.state_value
             )
+        
+        print("user_input_action:", user_input_action)   
+        print("user_input_action,action:", user_input_action.action_value)  
+
+        # if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
+        #     action = ActionInfo(
+        #         action=closest_action, 
+        #         all_action_probabilities=action.all_action_probabilities,
+        #         action_value=closest_action,
+        #         state_value=action.state_value
+        #     )
         
         # print('Bare action before filtering: {}'.format(action))
         self.last_action_info = action
