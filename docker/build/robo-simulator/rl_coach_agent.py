@@ -940,6 +940,20 @@ class Agent(AgentInterface):
                 # print("closest_action_match", action ,closest_index)
 
         return closest_index
+    
+    def map_continuous_speed_range(self, old_speed):
+        """
+        Maps a speed value from the range 0 to 4 to the range -2 to 1.
+
+        Args:
+        old_speed (float): The speed value to be mapped from the old range.
+
+        Returns:
+        float: The speed value mapped to the new range.
+        """
+        
+        return (3 * old_speed / 4) - 2
+
 
     def act(self, action: Union[None, ActionType]=None) -> ActionInfo:
         """
@@ -967,16 +981,18 @@ class Agent(AgentInterface):
                 # print("action_space", action_space)
                 
                 controller_state = self.get_controller_state()
-                # print("controller_state", controller_state)
+                print("controller_state", controller_state)
                 self.set_user_input_state(controller_state)
                 
                 base_action = self.get_controller_action(controller_state)
-                # print("base_action", base_action)
+                print("base_action", base_action)
 
                 if meta_data.action_space_type == 'discrete':
                     closest_action = self.find_closest_action_index(base_action, action_space)
-                else:
-                    closest_action = (base_action['steering_angle'], base_action['speed'])
+                else: # For continuous action space
+                    speed = base_action['speed']
+                    mapped_speed = base_action['steering_angle'] / 30
+                    closest_action = [mapped_speed, self.map_continuous_speed_range(speed)]
                 
                 # print("closest_action", closest_action)
 
