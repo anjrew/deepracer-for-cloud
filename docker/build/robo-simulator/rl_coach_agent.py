@@ -981,11 +981,11 @@ class Agent(AgentInterface):
                 # print("action_space", action_space)
                 
                 controller_state = self.get_controller_state()
-                print("controller_state", controller_state)
+                # print("controller_state", controller_state)
                 self.set_user_input_state(controller_state)
                 
                 base_action = self.get_controller_action(controller_state)
-                print("base_action", base_action)
+                # print("base_action", base_action)
 
                 if meta_data.action_space_type == 'discrete':
                     closest_action = self.find_closest_action_index(base_action, action_space)
@@ -997,7 +997,8 @@ class Agent(AgentInterface):
                 # print("closest_action", closest_action)
 
             except Exception as e:
-                print(f"Error initializing game controller: {e}")
+                pass
+                # print(f"Error initializing game controller: {e}")
         else:
             self.user_input_is_enabled = False
 
@@ -1023,8 +1024,8 @@ class Agent(AgentInterface):
                 action = self.choose_action(curr_state)  # type: ignore
                 assert isinstance(action, ActionInfo)
                 
-        print("auto_generated_action:", action)  
-        print("auto_generated_action,action:", action.action_value)    # type: ignore
+        # print("auto_generated_action:", action)  
+        # print("auto_generated_action,action:", action.action_value)    # type: ignore
 
         user_input_action = ActionInfo(
                 action=closest_action, 
@@ -1033,8 +1034,8 @@ class Agent(AgentInterface):
                 state_value=action.state_value   # type: ignore
             )
         
-        print("user_input_action:", user_input_action)   
-        print("user_input_action,action:", user_input_action.action_value)  
+        # print("user_input_action:", user_input_action)   
+        # print("user_input_action,action:", user_input_action.action_value)  
 
         if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
             action = ActionInfo(
@@ -1053,12 +1054,12 @@ class Agent(AgentInterface):
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
 
-        print("Action: {}".format(filtered_action_info))
-        print("Action value: {}".format(filtered_action_info.action))
-        print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
-        print("Action action_value: {}".format(filtered_action_info.action_value))
-        print("Action state_value: {}".format(filtered_action_info.state_value))
-        print("Action max_action_value: {}".format(filtered_action_info.max_action_value))
+        # print("Action: {}".format(filtered_action_info))
+        # print("Action value: {}".format(filtered_action_info.action))
+        # print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
+        # print("Action action_value: {}".format(filtered_action_info.action_value))
+        # print("Action state_value: {}".format(filtered_action_info.state_value))
+        # print("Action max_action_value: {}".format(filtered_action_info.max_action_value))
         return filtered_action_info
 
     def run_pre_network_filter_for_inference(self, state: StateType, update_filter_internal_state: bool=True)\
