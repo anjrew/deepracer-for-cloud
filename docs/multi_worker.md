@@ -14,6 +14,18 @@ To avoid issues with the position from which evaluations are run ensure that `( 
 
 Example: With 3 workers set `num_episodes_between_training: 30` and `DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST=0.1`.
 
+1. Calculate DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST:
+
+If you know the values of num_episodes_between_training and DR_WORKERS, you can solve for DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST:
+
+DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST=1.0 / (num_episodes_between_training/DR_WORKERS)
+
+2. Calculate num_episodes_between_training:
+
+If you know the values of DR_WORKERS and DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST, you can solve for num_episodes_between_training:
+
+num_episodes_between_training=1.0/(DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST×DR_WORKERS)
+
 Note; Sagemaker will stop collecting experiences once you have reached 10.000 steps (3-layer CNN) in an iteration. For longer tracks with 600-1000 steps per completed episodes this will define the upper bound for the number of workers and episodes per iteration.
 
 ## Training with different parameters for each worker

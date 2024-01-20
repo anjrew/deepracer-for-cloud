@@ -133,13 +133,17 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
                                                              'world_name': config['WORLD_NAME']}
 
         else:  # i >= 2 
-            #read in additional configuration file.  format of file must be worker#-run.env
-            location = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'worker-{}.env'.format(i)))
+            # Read in additional configuration file. Format of file must be worker#-run.env
+            location = os.path.abspath(os.path.join(os.environ.get('DR_DIR'), f'worker-{i}.env'))
             with open(location, 'r') as fh:
-                vars_dict = dict(
-                    tuple(line.split('='))
-                    for line in fh.read().splitlines() if not line.startswith('#')
-                    )
+                vars_dict = {}
+                for line in fh.read().splitlines():
+                    if not line.startswith('#') and line.strip():
+                        parts = line.split('=')
+                        if len(parts) == 2:
+                            vars_dict[parts[0].strip()] = parts[1].strip()
+                        else:
+                            print(f"Warning: Ignoring malformed line in env file: {line}")
 
             # Reset parameters for the configuration of this worker number
             os.environ.update(vars_dict)
@@ -204,17 +208,25 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
             s3_yaml_name_list = s3_yaml_name.split('.')
             s3_yaml_name_temp = s3_yaml_name_list[0] + "_%d.yaml" % i
 
-            #upload additional training params files
+            # Upload additional training params files
             yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name_temp))
-            local_yaml_path = os.path.abspath(os.path.join(tmp_path, 'training-params-' + str(round(time.time())) + '.yaml'))
-            os.makedirs(local_yaml_path, exist_ok=True) 
+            local_yaml_file = 'training-params-' + str(round(time.time())) + '.yaml'
+            local_yaml_path = os.path.abspath(os.path.join(tmp_path, local_yaml_file))
+
+            # Create the directory if it doesn't exist
+            local_yaml_dir = os.path.dirname(local_yaml_path)
+            os.makedirs(local_yaml_dir, exist_ok=True)
+
+            # Write to the YAML file
             with open(local_yaml_path, 'w') as yaml_file:
                 yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
+
+            # Upload to S3
             s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)
 
             # Store in multi_config array
             multi_config['multi_config'][i - 1] = {'config_file': s3_yaml_name_temp,
-                                                             'world_name': config['WORLD_NAME']}
+                                       'world_name': config['WORLD_NAME']}
 
     print(json.dumps(multi_config))
 
