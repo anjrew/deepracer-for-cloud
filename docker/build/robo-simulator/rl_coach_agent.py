@@ -997,8 +997,7 @@ class Agent(AgentInterface):
                 # print("closest_action", closest_action)
 
             except Exception as e:
-                pass
-                # print(f"Error initializing game controller: {e}")
+                print(f"Error initializing game controller: {e}")
         else:
             self.user_input_is_enabled = False
 
@@ -1027,17 +1026,18 @@ class Agent(AgentInterface):
         # print("auto_generated_action:", action)  
         # print("auto_generated_action,action:", action.action_value)    # type: ignore
 
-        user_input_action = ActionInfo(
-                action=closest_action, 
-                all_action_probabilities=action.all_action_probabilities,   # type: ignore
-                action_value=closest_action,
-                state_value=action.state_value   # type: ignore
-            )
+        # user_input_action = ActionInfo(
+        #         action=closest_action, 
+        #         all_action_probabilities=action.all_action_probabilities,   # type: ignore
+        #         action_value=closest_action,
+        #         state_value=action.state_value   # type: ignore
+        #     )
         
         # print("user_input_action:", user_input_action)   
         # print("user_input_action,action:", user_input_action.action_value)  
 
         if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
+            print("Assiging action from controller" , closest_action)
             action = ActionInfo(
                 action=closest_action, 
                 all_action_probabilities=action.all_action_probabilities,
@@ -1053,9 +1053,13 @@ class Agent(AgentInterface):
         # can no longer use the transition in it's replay buffer. It is possible that these filters
         # could be moved to the environment instead, but they are here now for historical reasons.
         filtered_action_info = self.output_filter.filter(self.last_action_info)
-
+        
+        # Assuming filtered_action_info.action is an array-like structure. Check if it contains NaN values
+        # print("Action value Before: {}".format(filtered_action_info.action))
+        if np.all(np.isnan(np.array(filtered_action_info.action))):
+            filtered_action_info.action = [0.0, 0.0]
         # print("Action: {}".format(filtered_action_info))
-        # print("Action value: {}".format(filtered_action_info.action))
+        print("Action value: {}".format(filtered_action_info.action))
         # print("Action probability: {}".format(filtered_action_info.all_action_probabilities))
         # print("Action action_value: {}".format(filtered_action_info.action_value))
         # print("Action state_value: {}".format(filtered_action_info.state_value))
