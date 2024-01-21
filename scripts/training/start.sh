@@ -149,7 +149,7 @@ if [ "$DR_WORKERS" -gt 1 ]; then
     echo "Using COMPOSE_FILES: " + $COMPOSE_FILES
   fi
 
-  if [ "$DR_TRAIN_MULTI_CONFIG" == "True" ]; then
+  if [ "$DR_TRAIN_MULTI_CONFIG" == "True" ] && [ "$DR_WORKERS" -gt 1 ]; then
     export MULTI_CONFIG=$WORKER_CONFIG
     echo "Multi-config training, creating multiple Robomaker configurations in $S3_PATH" 
     echo "Using COMPOSE_FILES: " + $COMPOSE_FILES
