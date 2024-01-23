@@ -23,7 +23,7 @@ from typing import Dict, List, Union, Tuple
 import numpy as np
 import requests
 from six.moves import range
-
+import socket
 from rl_coach.agents.agent_interface import AgentInterface
 from rl_coach.architectures.network_wrapper import NetworkWrapper
 from rl_coach.base_parameters import AgentParameters, Device, DeviceType, DistributedTaskParameters, Frameworks
@@ -218,8 +218,19 @@ class Agent(AgentInterface):
 
         # batch rl
         self.ope_manager = OpeManager() if self.ap.is_batch_rl_training else None
-        # print("[RL] Agent init successful")
+        self.local_ip = self.get_local_ip()
+        print("[RL] Agent init successful")
 
+    def get_local_ip(self):
+        try:
+            # This creates a socket and connects to a server on the Internet
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.connect(("8.8.8.8", 80))  # Google's DNS server
+                local_ip = s.getsockname()[0]
+                return local_ip
+        except Exception as e:
+            print(f"Error obtaining local IP: {e}")
+            return None
 
     @property
     def parent(self) -> 'LevelManager':
@@ -849,7 +860,7 @@ class Agent(AgentInterface):
             return obj
            
         else:
-            Logger.error(f"Error getting controller input: {response.status_code}")
+            raise Exception(f"Error getting controller input: {response.status_code}")
 
     
     def get_controller_action(self, controller_state):
@@ -981,20 +992,27 @@ class Agent(AgentInterface):
                 # print("action_space", action_space)
                 
                 controller_state = self.get_controller_state()
-                # print("controller_state", controller_state)
-                self.set_user_input_state(controller_state)
-                
-                base_action = self.get_controller_action(controller_state)
-                # print("base_action", base_action)
+                print('Local ip is', type(self.local_ip), self.local_ip)
+                if ('info' not in controller_state
+                    or controller_state['info'] is None
+                        or controller_state['info'] == self.local_ip):
+        
+                    # print("controller_state", controller_state)
+                    self.set_user_input_state(controller_state)
 
-                if meta_data.action_space_type == 'discrete':
-                    closest_action = self.find_closest_action_index(base_action, action_space)
-                else: # For continuous action space
-                    speed = base_action['speed']
-                    mapped_speed = base_action['steering_angle'] / 30
-                    closest_action = [mapped_speed, self.map_continuous_speed_range(speed)]
-                
-                # print("closest_action", closest_action)
+                    base_action = self.get_controller_action(controller_state)
+                    # print("base_action", base_action)
+
+                    if meta_data.action_space_type == 'discrete':
+                        closest_action = self.find_closest_action_index(base_action, action_space)
+                    else:  # For continuous action space
+                        speed = base_action['speed']
+                        mapped_speed = base_action['steering_angle'] / 30
+                        closest_action = [mapped_speed, self.map_continuous_speed_range(speed)]
+                        
+                    # print("closest_action", closest_action)
+                else:           
+                    print("Did not pick action from controller based on state", controller_state)
 
             except Exception as e:
                 print(f"Error initializing game controller: {e}")
@@ -1036,8 +1054,10 @@ class Agent(AgentInterface):
         # print("user_input_action:", user_input_action)   
         # print("user_input_action,action:", user_input_action.action_value)  
 
-        if self._phase == RunPhase.TRAIN and self.user_input_is_enabled:
-            print("Assiging action from controller" , closest_action)
+        if self._phase == RunPhase.TRAIN \
+            and self.user_input_is_enabled \
+                and closest_action is not None:
+            print("Assigning action from controller" , closest_action)
             action = ActionInfo(
                 action=closest_action, 
                 all_action_probabilities=action.all_action_probabilities,
