@@ -22,3 +22,14 @@ To see what commands are scheduled in a job, use at -c followed by the job numbe
 ```bash
 sudo at -c [job number]
 ```
+
+Tip:
+
+Example commands to stop training and shutdown after 6 hours:
+
+```bash
+sudo at now + 8 hours
+
+dr-stop-training 
+shutdown +2
+```

@@ -127,7 +127,7 @@ def show_stats():
       ax5.title.set_text('Max Completion per iteration')  # type: ignore
       ax5.plot(master_iteration_values, train_completion.rolling(rolling_average).max(), linewidth=linewidth)
       ax5.plot(master_iteration_values, eval_completion.rolling(rolling_average).max(), linewidth=linewidth)
-      ax5.plot(master_iteration_values, summary_df[['train_completion','eval_completion']].max(axis='columns').rolling(rolling_average).max(), linewidth=linewidth)
+      ax5.plot(master_iteration_values, summary_df[['train_completion','eval_completion']].max(axis='columns').rolling(rolling_average).mean(), linewidth=linewidth)
       ax5.legend(['Train Iteration/Completion', 'Eval Iteration/Completion', 'Average Iteration/Completion'])
       ax5.set_xlabel('Iteration')
       ax5.set_ylabel('Completion %')
