@@ -1199,7 +1199,8 @@ class Agent(AgentInterface):
 
         :return: None
         """
-        pass
+        self.user_input_is_enabled = False
+
 
     def get_predictions(self, states: List[Dict[str, np.ndarray]], prediction_type: PredictionType):
         """
