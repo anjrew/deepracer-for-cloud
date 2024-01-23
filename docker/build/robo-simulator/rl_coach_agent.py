@@ -978,8 +978,8 @@ class Agent(AgentInterface):
             # This agent never plays  while training (e.g. behavioral cloning)
             return None
 
-        # print("Current Phase", self._phase)
-        # print("Input action" , action)
+        print("Current Phase", self._phase)
+        print("Input action" , action)
         closest_action = None
         if self._phase == RunPhase.TRAIN:
             try:  
@@ -992,13 +992,13 @@ class Agent(AgentInterface):
                 # print("action_space", action_space)
                 
                 controller_state = self.get_controller_state()
+                # print("controller_state", controller_state)
+                self.set_user_input_state(controller_state)
+                
                 print('Local ip is', type(self.local_ip), self.local_ip)
                 if ('info' not in controller_state
                     or controller_state['info'] is None
                         or controller_state['info'] == self.local_ip):
-        
-                    # print("controller_state", controller_state)
-                    self.set_user_input_state(controller_state)
 
                     base_action = self.get_controller_action(controller_state)
                     # print("base_action", base_action)
